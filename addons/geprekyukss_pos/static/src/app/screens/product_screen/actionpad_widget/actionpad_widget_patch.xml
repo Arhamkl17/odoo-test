@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-inherit="pos_restaurant.ActionpadWidget" t-inherit-mode="extension">
+
+        <!-- Sembunyikan tombol Course/Kursus di ActionpadWidget -->
+        <xpath expr='//button[@t-on-click="()=>this.pos.addCourse()"]' position="attributes">
+            <attribute name="t-if">false</attribute>
+        </xpath>
+
+        <!-- Ganti tombol Payment jadi BAYAR -->
+        <xpath expr="//button[hasclass('pay-order-button-restaurant')]" position="replace">
+            <button t-if="!currentOrder.isEmpty() and this.pos.numpadMode != 'table'"
+                t-on-click="() =&gt; pos.pay()"
+                class="button pay-order-button pay-order-button-restaurant btn btn-lg w-50"
+                t-attf-class="{{ this.highlightPay ? 'highlight btn-primary' : 'btn-secondary' }}"
+            >
+                BAYAR
+            </button>
+        </xpath>
+
+        <!-- Restyle tombol New -->
+        <xpath expr='//button[@t-on-click="() => this.clickNew()"]' position="attributes">
+            <attribute name="class">button btn btn-lg d-flex flex-row align-items-center justify-content-center w-50 gy-btn-new</attribute>
+        </xpath>
+
+    </t>
+</templates>

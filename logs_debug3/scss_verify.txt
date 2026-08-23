@@ -1,0 +1,21 @@
+time="2026-08-23T02:43:50Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+    gap: 16px !important;
+}
+
+
+/* 15. CATEGORY ICON (EMOJI) - Geprekyukss
+   Diatur per-kategori di: Point of Sale > Konfigurasi > Kategori PoS > "Ikon Preset" */
+.pos .category-button {
+    .gy-category-emoji {
+        font-size: 1rem;
+        line-height: 1;
+        margin-right: 0.25rem;
+    }
+    .gy-category-emoji-img {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        margin-right: 0.25rem;
+        flex-shrink: 0;
+    }
+}

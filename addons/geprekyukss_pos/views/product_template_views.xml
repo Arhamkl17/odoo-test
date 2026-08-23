@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_pos_spicy" model="ir.ui.view">
+        <field name="name">product.template.form.pos.spicy</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="point_of_sale.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <!--
+                Ditaruh di dalam tab "POS" (page name="pos" > group name="pos"),
+                setelah field pos_categ_ids ("Kategori") — bukan di header sempit
+                dekat checkbox available_in_pos seperti versi sebelumnya (itu
+                yang bikin field ini nyempil/ketutup di header, ketahuan lewat
+                get_view() debug).
+            -->
+            <xpath expr="//page[@name='pos']//field[@name='pos_categ_ids']" position="after">
+                <field name="pos_spicy"
+                       invisible="not available_in_pos"
+                       help="Munculkan popup level pedas (1-5) saat produk ini ditambahkan di kasir"/>
+                <field name="pos_badge"
+                       invisible="not available_in_pos"
+                       help="Label kecil (Best Seller / Baru) yang tampil di kartu produk pada kasir POS"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

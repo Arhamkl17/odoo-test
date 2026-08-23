@@ -1,0 +1,805 @@
+@import url('https://fonts.googleapis.com/css?family=Inter:400,500,600,700,800&display=swap');
+/* =============================================================================
+   GEPREK YUKSS — POS LIGHT THEME
+   =============================================================================
+   Restyles the stock Odoo 19 Point of Sale screen to match the reference
+   screenshot (light background, red-orange gradient accents, white cards
+   with soft shadow).
+
+   CHANGE LOG:
+   - v1: dark theme (background gelap, orange/gold accents).
+   - v2 (this file): pivoted to light theme per new reference screenshot.
+     Structure/section order kept identical to v1 so diffs stay readable;
+     only color tokens + category/badge visual treatment changed.
+
+   IMPORTANT — READ BEFORE TWEAKING:
+   Odoo's POS DOM structure/class names are NOT part of a stable public API
+   and shift a little between minor versions (17 -> 18 -> 19). The selectors
+   below are written against the structure that has been stable since the
+   OWL rewrite (Odoo 17+): `.product-screen`, `.product-list`, `article.product`,
+   `.category-button`, `.order-container`, `.orderline`, `.actionpad`, `.numpad`,
+   plus the confirmed-real `.pos-topheader` / `.pos-leftheader` / `.pos-rightheader`
+   classes found in navbar.xml (see sections 8-9).
+
+   If, after installing this on your actual Odoo 19 instance, something does
+   NOT pick up the new look:
+     1. Open the browser inspector on that element.
+     2. Find its real class name in your installed version.
+     3. Add/replace the selector in the matching section below.
+   Everything here is additive (we only override colors/spacing/radius on
+   top of Odoo's existing classes), so a missed selector just means "that
+   one element stays default" — nothing breaks.
+   ============================================================================= */
+
+:root {
+    // ---- Design tokens extracted from the light-theme reference screenshot -
+    --gy-bg: #f5f5f5;
+    --gy-surface: #ffffff;
+    --gy-surface-2: #fafafa;
+    --gy-surface-3: #f0f0f1;
+    --gy-border: rgba(0, 0, 0, 0.08);
+    --gy-border-strong: rgba(0, 0, 0, 0.14);
+
+    --gy-red: #e8432f;
+    --gy-red-2: #ff5a3c;
+    // Aliases kept so any selector still written as --gy-orange keeps working.
+    --gy-orange: var(--gy-red);
+    --gy-orange-2: var(--gy-red-2);
+
+    --gy-gold: #f0b429;
+    --gy-gold-2: #ffd76a;
+    --gy-green: #16a34a;
+
+    --gy-text: #1a1a1a;
+    --gy-text-muted: #6b6b6f;
+    --gy-text-faint: #9a9a9e;
+
+    --gy-radius-lg: 18px;
+    --gy-radius-md: 12px;
+    --gy-radius-sm: 8px;
+    --gy-radius-pill: 999px;
+
+    // Light theme uses soft shadow instead of heavy dark-mode shadow.
+    --gy-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    --gy-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+// Base font: Poppins, benar-benar di-load via Google Fonts (bukan cuma nama
+// di font-family tanpa file font-nya seperti sebelumnya).
+
+.pos {
+    background: var(--gy-bg) !important;
+    color: var(--gy-text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+// Nama produk: jangan kepotong di 2 baris, kasih ruang 3 baris + font
+// yang proporsional supaya nama panjang tetap terbaca utuh.
+.pos article.product .product-name {
+    display: block !important;
+    white-space: normal !important;
+    font-family: "Inter", sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    color: #111111 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
+
+/* ---------------------------------------------------------------------------
+   1. HEADER (logo / search / member / cashier / theme toggle)
+   ------------------------------------------------------------------------- */
+.pos .pos-leftheader,
+.pos .header-cashier,
+.pos-content > header {
+    background: var(--gy-surface);
+    border-bottom: 1px solid var(--gy-border);
+    box-shadow: none;
+}
+
+.pos input.searchbox,
+.pos .searchbox input,
+.pos input[placeholder*="Search"] {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text);
+
+    &::placeholder {
+        color: var(--gy-text-faint);
+    }
+}
+
+.pos .header-button,
+.pos .username,
+.pos .cashier-name {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text);
+}
+
+/* ---------------------------------------------------------------------------
+   1b. HEADER BRAND (logo mark + wordmark + tagline)
+   NOTE: header_brand_patch.xml referenced here still does not exist in the
+   module (confirmed via `find addons/geprekyukss_pos -type f`) — this is
+   Tahap 3 in the roadmap, not done yet. These rules are harmless no-ops
+   until that XML patch actually renders a `.gy-header-brand` element; kept
+   here so Tahap 3 only needs to add the template, not touch this SCSS.
+   ------------------------------------------------------------------------- */
+.pos .pos-leftheader {
+    position: relative;
+    // Adjust this once you see it on your phone -- it just needs to clear
+    // the width of .gy-header-brand below so the brand mark doesn't
+    // overlap the search bar / existing header buttons.
+    padding-left: 170px;
+}
+
+.gy-header-brand {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none; // decorative only, never blocks clicks
+    z-index: 3;
+
+    img {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+        flex: none;
+    }
+}
+
+.gy-wordmark-block {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.gy-wordmark {
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 0.01em;
+}
+
+.gy-word-1 {
+    color: var(--gy-text);
+}
+
+.gy-word-2 {
+    color: var(--gy-red);
+    margin-left: 2px;
+}
+
+.gy-tagline {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--gy-red);
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   2. CATEGORY TABS (pill row: "Paket Recomended", "Paket Crispy", ...)
+   Reference: active category = filled solid red pill + white icon/text.
+   Inactive = white pill, thin gray border, colored icon (icon color itself
+   comes from pos_category_icon / pos_category_icon_image on the model —
+   this only styles the pill container, not the icon glyph color).
+   ------------------------------------------------------------------------- */
+.pos .categories,
+.pos .category-list {
+    background: transparent;
+    gap: 10px;
+}
+
+.pos .category-button {
+    background: var(--gy-surface) !important;
+    border: 1px solid var(--gy-border) !important;
+    border-radius: var(--gy-radius-pill) !important;
+    color: var(--gy-text) !important;
+    font-weight: 600;
+    box-shadow: var(--gy-shadow);
+    opacity: 1 !important;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:not(.opacity-75) {
+        background: linear-gradient(135deg, var(--gy-red-2), var(--gy-red)) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(232, 67, 47, 0.28);
+
+        i,
+        .fa,
+        img {
+            filter: brightness(0) invert(1);
+        }
+    }
+
+    &.opacity-75 {
+        background: var(--gy-surface) !important;
+        border-color: var(--gy-border) !important;
+        color: var(--gy-text) !important;
+        box-shadow: var(--gy-shadow);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   3. PRODUCT GRID + PRODUCT CARD
+   ------------------------------------------------------------------------- */
+.pos .product-list-container,
+.pos .product-screen .leftpane {
+    background: var(--gy-bg);
+}
+
+.pos .product-list {
+    gap: 20px;
+}
+
+.pos article.product,
+.pos .product-list .product {
+    position: relative;
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--gy-shadow);
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &:hover {
+        border-color: var(--gy-border-strong);
+        box-shadow: var(--gy-shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .product-img,
+    .product-picture,
+    img {
+        border-radius: var(--gy-radius-lg) var(--gy-radius-lg) 0 0;
+        object-fit: cover;
+    }
+
+    .product-name {
+        color: var(--gy-text);
+        font-weight: 600;
+        font-size: 0.92rem;
+    }
+
+    .product-price {
+        color: var(--gy-red);
+        font-weight: 700;
+    }
+}
+
+// Round "+" add button that sits bottom-right of each card in the reference —
+// outline red circle, not filled, per the light-theme screenshot.
+.pos article.product .product-content::after,
+.pos .product-add-button {
+    background: var(--gy-surface);
+    border: 1.5px solid var(--gy-red);
+    color: var(--gy-red);
+    border-radius: var(--gy-radius-pill);
+}
+
+/* ---------------------------------------------------------------------------
+   4. PRODUCT BADGES (BEST SELLER / NEW / PEDAS)
+   These come from our own patched ProductCard template — see
+   `app/screens/product_screen/product_card_badges.xml`. Kept here so the
+   colors live with the rest of the theme tokens.
+   Light-theme treatment: solid background + thin white border (so the badge
+   still reads clearly against busy food photography), not the flat-color
+   dark-mode version.
+   ------------------------------------------------------------------------- */
+.pos .gy-badge {
+    position: absolute;
+    top: 8px;
+    z-index: 2;
+    padding: 3px 8px;
+    border: 1.5px solid #ffffff;
+    border-radius: var(--gy-radius-sm);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+
+    &.gy-badge--left {
+        left: 8px;
+    }
+
+    &.gy-badge--right {
+        right: 8px;
+    }
+
+    &.gy-badge-best-seller {
+        background: linear-gradient(135deg, var(--gy-gold-2), var(--gy-gold));
+        color: #241a02;
+    }
+
+    &.gy-badge-new {
+        background: var(--gy-green);
+        color: #ffffff;
+    }
+
+    &.gy-badge-pedas {
+        background: var(--gy-red);
+        color: #ffffff;
+    }
+}
+
+// Spice level label already rendered on the orderline by orderline_patch.xml.
+.pos .spice-level-badge {
+    color: var(--gy-red) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   5. ORDER PANEL (right side: "PESANAN", member card, cart lines, totals)
+   ------------------------------------------------------------------------- */
+.pos .product-screen .rightpane,
+.pos .order-container,
+.pos .rightpane {
+    background: var(--gy-surface);
+    border-left: 1px solid var(--gy-border);
+}
+
+.pos .order .orderline,
+.pos .orderline {
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    margin-bottom: 8px;
+    color: var(--gy-text);
+    box-shadow: var(--gy-shadow);
+
+    &.selected {
+        border-color: var(--gy-red);
+    }
+
+    .price,
+    .product-price {
+        color: var(--gy-red);
+        font-weight: 700;
+    }
+}
+
+.pos .order-summary,
+.pos .payment-status-summary,
+.pos .summary {
+    .total,
+    .value.total {
+        color: var(--gy-red);
+        font-weight: 800;
+        font-size: 1.35rem;
+    }
+
+    .subentry .value,
+    .line .value {
+        color: var(--gy-text-muted);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   5b. MEMBER CARD (avatar + name + "Verified" badge + poin loyalti)
+   NOTE: no XML patch renders this yet (Tahap 6, not started) — these rules
+   are forward-declared so the markup can drop straight in later. Wire to
+   `pos_wa_number` / `pos_wa_verified` / `pos_loyalty_points` from
+   res_partner.py when that template is built.
+   ------------------------------------------------------------------------- */
+.gy-member-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    padding: 10px 12px;
+    box-shadow: var(--gy-shadow);
+}
+
+.gy-member-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--gy-red);
+    color: #ffffff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+}
+
+.gy-member-verified {
+    color: var(--gy-green);
+    font-weight: 600;
+    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.gy-member-points {
+    margin-left: auto;
+    color: var(--gy-red);
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   6. ACTION BUTTONS (numpad, function-key row, "BAYAR" pay button)
+   ------------------------------------------------------------------------- */
+.pos .actionpad .button,
+.pos .control-buttons .control-button {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text);
+}
+
+// Primary pay / checkout button — full-width red-orange gradient bar with
+// white text in the reference, same as before, just re-tuned to the new
+// accent hues.
+.pos .actionpad .button.pay-order-button,
+.pos .actionpad .pay-order-button,
+.pos .payment-button,
+.pos .button.next {
+    background: linear-gradient(135deg, var(--gy-red-2), var(--gy-red));
+    border: none;
+    border-radius: var(--gy-radius-md);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 6px 16px rgba(232, 67, 47, 0.3);
+
+    &:hover {
+        filter: brightness(1.05);
+    }
+}
+
+.pos .numpad button,
+.pos .numpad .number-char {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    color: var(--gy-text);
+    border-radius: var(--gy-radius-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   7. STATUS BAR (bottom footer: version, online dot, printer, clock)
+   ------------------------------------------------------------------------- */
+.pos .pos-topheader ~ .status-buttons,
+.pos footer,
+.pos .order-management-status,
+.pos .pos-status-bar {
+    background: var(--gy-surface);
+    border-top: 1px solid var(--gy-border);
+    color: var(--gy-text-faint);
+    font-size: 0.75rem;
+}
+
+.pos .status-dot,
+.pos .oe_status.oe_grey.oe_status_home,
+.pos .js_connected {
+    background: var(--gy-green);
+    border-radius: 50%;
+}
+
+/* ---------------------------------------------------------------------------
+   8. LOGO HEADER — override CSS var resmi Odoo, bukan xpath patch.
+   Terkonfirmasi dari source asli: point_of_sale/.../navbar/navbar.scss
+   ------------------------------------------------------------------------- */
+.pos {
+    --navbar-logo: url("/geprekyukss_pos/static/src/img/logo.jpg");
+}
+
+/* ---------------------------------------------------------------------------
+   9. HEADER — override, sudah dicek langsung ke navbar.xml asli Odoo 19.
+   Section 1 di atas pakai nama class hasil tebakan yang ternyata nggak ada
+   di versi ini — section ini dimuat belakangan jadi menang di cascade.
+   ------------------------------------------------------------------------- */
+.pos .pos-topheader {
+    background: var(--gy-surface) !important;
+    border-bottom: 1px solid var(--gy-border) !important;
+}
+
+.pos .pos-leftheader .btn,
+.pos .pos-rightheader .btn {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    color: var(--gy-text) !important;
+
+    &.active {
+        background: linear-gradient(135deg, var(--gy-red-2), var(--gy-red));
+        border-color: transparent;
+        color: #ffffff !important;
+    }
+}
+
+.pos .pos-rightheader input {
+    background: var(--gy-surface-2) !important;
+    border: 1px solid var(--gy-border) !important;
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text) !important;
+
+    &::placeholder {
+        color: var(--gy-text-faint);
+    }
+}
+
+.pos .status-buttons {
+    color: var(--gy-text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   10. FIX — orderline text invisible (Odoo default menang atas warna kita
+   karena kita tidak pakai !important). Dipaksa di sini biar pasti kepakai
+   di semua elemen anak orderline. Sama fix-nya seperti v1, cuma warnanya
+   yang disesuaikan ke light theme (teks gelap di atas card putih, bukan
+   teks terang di atas card gelap).
+   ------------------------------------------------------------------------- */
+.pos .orderline,
+.pos .orderline *,
+.pos .order .orderline,
+.pos .order .orderline * {
+    color: var(--gy-text) !important;
+}
+
+.pos .orderline .price,
+.pos .orderline .product-price,
+.pos .order .orderline .price,
+.pos .order .orderline .product-price {
+    color: var(--gy-red) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   11. FIX — gambar produk tidak muncul di kartu.
+   UPDATE: root cause ternyata bukan CSS sama sekali — "Show Product Images"
+   belum dicentang di POS Settings. Sudah confirmed solved di sisi Odoo
+   Settings. Aturan di bawah ini TETAP dipertahankan karena masih berguna
+   sebagai safety net (mencegah container collapse ke tinggi 0 kalau ada
+   produk tanpa gambar / CSS lain yang belum ketahuan konflik), bukan lagi
+   fix utama.
+   ------------------------------------------------------------------------- */
+.pos article.product .product-img,
+.pos article.product .product-picture,
+.pos article.product img,
+.pos .product-list .product img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+
+// Container gambar (pakai Bootstrap "ratio ratio-4x3" untuk aspect-ratio
+// otomatis) perlu overflow:hidden tegas — tanpa ini, kalau img di dalamnya
+// meluber sedikit saja dari box ratio, luberan itu bisa "makan" ke area
+// padding konten di bawahnya dan bikin teks kelihatan nempel ke gambar.
+.pos article.product .product-img {
+    overflow: hidden !important;
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    background: #ffffff;
+}
+
+/* ---------------------------------------------------------------------------
+   12. FIX — product-content perlu flex-column supaya nama & harga bertumpuk
+   vertikal, bukan sejajar horizontal (Odoo bawaan pakai d-flex row).
+   ------------------------------------------------------------------------- */
+.pos article.product .product-content {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+/* ---------------------------------------------------------------------------
+   13. FIX — nama & harga produk kepotong/numpuk di card kecil.
+   Perkecil font, batasi nama max 2 baris (potong pakai "...", bukan overflow),
+   dan kurangi tinggi gambar biar ada ruang buat teks di bawahnya.
+   ------------------------------------------------------------------------- */
+// (dikonsolidasi ke rule .product-name di bagian bawah file)
+
+.pos article.product .product-price {
+    font-size: 0.95rem !important;
+    line-height: 1.2;
+    margin-top: auto !important;
+    padding-top: 4px;
+}
+
+.pos article.product .product-content {
+    height: auto !important;
+    padding: 14px 12px 10px 12px !important;
+    gap: 4px;
+}
+
+// (height img dihapus, sekarang mengikuti aspect-ratio container ratio-4x3 Bootstrap)
+
+/* ---------------------------------------------------------------------------
+   14. FIX — kategori kepanjangan ke bawah (2 baris) & makan banyak ruang saat
+   landscape. Bikin jadi 1 baris horizontal-scroll, padding & font diperkecil.
+   ------------------------------------------------------------------------- */
+.pos .categories,
+.pos .category-list {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 4px !important;
+    gap: 6px !important;
+}
+
+.pos .category-button {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: unset !important;
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+    flex-direction: row !important;
+    gap: 4px !important;
+
+    i, .fa, img {
+        font-size: 0.85rem;
+        width: 14px;
+        height: 14px;
+    }
+}
+
+// ==== Section 15: Panel PESANAN — header, tombol Bersihkan, tombol Bayar ====
+.gy-order-title {
+    font-size: 1rem;
+    color: var(--text);
+}
+.gy-clear-btn {
+    background: transparent;
+    border: none;
+    color: #999;
+    &:hover { color: var(--primary); }
+    &:disabled { opacity: 0.4; }
+}
+.gy-add-note {
+    background: #fff;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    color: var(--text-muted, #666);
+    cursor: pointer;
+}
+.actionpad .pay-order-button {
+    background: linear-gradient(90deg, #e8432f, #ff5a3c) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    font-weight: bold;
+}
+
+// ==== Section 16: qty stepper & tombol hapus per cart item ====
+.gy-line-controls {
+    .gy-qty-btn {
+        padding: 0.1rem 0.5rem;
+    }
+    input.quantity {
+        max-width: 2.5rem;
+    }
+}
+.gy-delete-line-btn {
+    color: #c0392b;
+    background: transparent;
+    border: none;
+    &:hover { color: #e74c3c; }
+}
+
+/* ---------------------------------------------------------------------------
+   18. REVERSE POSISI PANEL — PESANAN di kanan sesuai referensi desain
+   (leftpane/rightpane adalah nama class bawaan Odoo, DOM asli leftpane duluan
+   makanya default-nya PESANAN di kiri — di-reverse murni via CSS order,
+   XML core tidak disentuh)
+   ------------------------------------------------------------------------- */
+.pos .product-screen {
+    > .leftpane {
+        order: 2;
+        border-right: none !important;
+        border-left: 1px solid var(--gy-border);
+    }
+    > .rightpane {
+        order: 1;
+    }
+}
+
+// ===== SECTION 19: TOMBOL "BARU" (action pad, mode restoran) =====
+// Gaya abu-abu/outline, ukuran match tombol BAYAR (btn-lg w-50)
+.pos .actionpad .gy-btn-new {
+    background: #fff;
+    border: 2px solid var(--gy-border, #d1d5db);
+    color: #374151;
+    font-weight: 600;
+}
+.pos .actionpad .gy-btn-new:hover {
+    background: #f3f4f6;
+}
+
+// ==== Fixed-ratio 16:10 scaled & centered layout (letterbox) ====
+$design-width: 1280px;
+$design-height: 800px;
+
+html {
+    overflow: hidden;
+    height: 100%;
+    background: #111827;
+}
+
+body.pos {
+    width: $design-width;
+    height: $design-height;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) scale(var(--pos-scale, 1));
+}
+
+// Odoo core nempel class "modal-open" ke <body> tiap dialog aktif, bawa rule
+// "html body.modal-open { position: fixed; }" yang specificity-nya lebih
+// tinggi dari body.pos biasa, jadi override absolute+top+left+transform kita
+// dan bikin box lompat ke pojok. Rule ini menang balik, spesifik + !important.
+html body.pos.modal-open {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: $design-width !important;
+    height: $design-height !important;
+    transform-origin: center center !important;
+    transform: translate(-50%, -50%) scale(var(--pos-scale, 1)) !important;
+}
+
+// Paksa root div Chrome (class dvh-100) ikut tinggi design, bukan tinggi layar asli
+body.pos > .pos {
+    height: $design-height !important;
+    max-height: $design-height !important;
+}
+
+// ==== Ikutkan popup/dialog container ke scaling & centering yang sama ====
+body.pos > .o-main-components-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: $design-width;
+    height: $design-height;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2000;
+
+    > * {
+        pointer-events: auto;
+    }
+}
+
+// Override grid produk jadi fixed 4 kolom (bukan auto-fill responsif bawaan Odoo)
+// supaya card lebih besar & renggang, sesuai reference desain baru.
+.product-list {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+}
+
+
+/* 15. CATEGORY ICON (EMOJI) - Geprekyukss
+   Diatur per-kategori di: Point of Sale > Konfigurasi > Kategori PoS > "Ikon Preset" */
+.pos .category-button {
+    .gy-category-emoji {
+        font-size: 1rem;
+        line-height: 1;
+        margin-right: 0.25rem;
+    }
+    .gy-category-emoji-img {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        margin-right: 0.25rem;
+        flex-shrink: 0;
+    }
+}

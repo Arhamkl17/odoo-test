@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-inherit="point_of_sale.Navbar" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('pos-leftheader')]" position="before">
+            <div class="gy-header-brand">
+                <img src="/geprekyukss_pos/static/src/img/logo.jpg" alt="Geprekyukss"/>
+                <div class="gy-wordmark-block">
+                    <div class="gy-wordmark">
+                        <span class="gy-word-1">Geprek</span><span class="gy-word-2">Yukss</span>
+                    </div>
+                    <div class="gy-tagline">AYAM GEPREK</div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>

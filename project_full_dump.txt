@@ -1,0 +1,1020 @@
+]633;E;echo "=== MANIFEST ===";a42d8c93-7393-408d-8722-81217f039843]633;C=== MANIFEST ===
+{
+    "name": "Geprekyukss - Custom POS (Spice Level & Member WA)",
+    "version": "19.0.1.0.0",
+    "category": "Point of Sale",
+    "summary": "Level pedas per orderline + verifikasi member via nomor WhatsApp",
+    "description": """
+Custom module untuk POS Geprekyukss.
+""",
+    "author": "Custom - Geprekyukss",
+    "depends": ["point_of_sale"],
+    "data": [
+        "views/product_template_views.xml",
+        "views/res_partner_views.xml",
+        "views/pos_category_views.xml",
+    ],
+    "assets": {
+        "point_of_sale._assets_pos": [
+            "geprekyukss_pos/static/src/scss/pos_theme.scss",
+        ],
+    },
+    "installable": True,
+    "application": False,
+    "license": "LGPL-3",
+}
+
+
+=== pos_theme.scss ===
+/* =============================================================================
+   GEPREK YUKSS — POS LIGHT THEME
+   =============================================================================
+   Restyles the stock Odoo 19 Point of Sale screen to match the reference
+   screenshot (light background, red-orange gradient accents, white cards
+   with soft shadow).
+
+   CHANGE LOG:
+   - v1: dark theme (background gelap, orange/gold accents).
+   - v2 (this file): pivoted to light theme per new reference screenshot.
+     Structure/section order kept identical to v1 so diffs stay readable;
+     only color tokens + category/badge visual treatment changed.
+
+   IMPORTANT — READ BEFORE TWEAKING:
+   Odoo's POS DOM structure/class names are NOT part of a stable public API
+   and shift a little between minor versions (17 -> 18 -> 19). The selectors
+   below are written against the structure that has been stable since the
+   OWL rewrite (Odoo 17+): `.product-screen`, `.product-list`, `article.product`,
+   `.category-button`, `.order-container`, `.orderline`, `.actionpad`, `.numpad`,
+   plus the confirmed-real `.pos-topheader` / `.pos-leftheader` / `.pos-rightheader`
+   classes found in navbar.xml (see sections 8-9).
+
+   If, after installing this on your actual Odoo 19 instance, something does
+   NOT pick up the new look:
+     1. Open the browser inspector on that element.
+     2. Find its real class name in your installed version.
+     3. Add/replace the selector in the matching section below.
+   Everything here is additive (we only override colors/spacing/radius on
+   top of Odoo's existing classes), so a missed selector just means "that
+   one element stays default" — nothing breaks.
+   ============================================================================= */
+
+:root {
+    // ---- Design tokens extracted from the light-theme reference screenshot -
+    --gy-bg: #f5f5f5;
+    --gy-surface: #ffffff;
+    --gy-surface-2: #fafafa;
+    --gy-surface-3: #f0f0f1;
+    --gy-border: rgba(0, 0, 0, 0.08);
+    --gy-border-strong: rgba(0, 0, 0, 0.14);
+
+    --gy-red: #e8432f;
+    --gy-red-2: #ff5a3c;
+    // Aliases kept so any selector still written as --gy-orange keeps working.
+    --gy-orange: var(--gy-red);
+    --gy-orange-2: var(--gy-red-2);
+
+    --gy-gold: #f0b429;
+    --gy-gold-2: #ffd76a;
+    --gy-green: #16a34a;
+
+    --gy-text: #1a1a1a;
+    --gy-text-muted: #6b6b6f;
+    --gy-text-faint: #9a9a9e;
+
+    --gy-radius-lg: 18px;
+    --gy-radius-md: 12px;
+    --gy-radius-sm: 8px;
+    --gy-radius-pill: 999px;
+
+    // Light theme uses soft shadow instead of heavy dark-mode shadow.
+    --gy-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    --gy-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+// Base font stack. The reference screenshot uses a rounded/geometric grotesk
+// (looks like Poppins/Inter). We default to a system stack that renders
+// close to that without a network font request. Swap this for @font-face
+// with a bundled woff2 if you need an exact match.
+.pos {
+    background: var(--gy-bg) !important;
+    color: var(--gy-text);
+    font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+   1. HEADER (logo / search / member / cashier / theme toggle)
+   ------------------------------------------------------------------------- */
+.pos .pos-topheader,
+.pos header.header-cashier,
+.pos .header-cashier,
+.pos-content > header {
+    background: var(--gy-surface);
+    border-bottom: 1px solid var(--gy-border);
+    box-shadow: none;
+}
+
+.pos input.searchbox,
+.pos .searchbox input,
+.pos input[placeholder*="Search"] {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text);
+
+    &::placeholder {
+        color: var(--gy-text-faint);
+    }
+}
+
+.pos .header-button,
+.pos .username,
+.pos .cashier-name {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text);
+}
+
+/* ---------------------------------------------------------------------------
+   1b. HEADER BRAND (logo mark + wordmark + tagline)
+   NOTE: header_brand_patch.xml referenced here still does not exist in the
+   module (confirmed via `find addons/geprekyukss_pos -type f`) — this is
+   Tahap 3 in the roadmap, not done yet. These rules are harmless no-ops
+   until that XML patch actually renders a `.gy-header-brand` element; kept
+   here so Tahap 3 only needs to add the template, not touch this SCSS.
+   ------------------------------------------------------------------------- */
+.pos .pos-topheader,
+.pos header.header-cashier,
+.pos .header-cashier {
+    position: relative;
+    // Adjust this once you see it on your phone -- it just needs to clear
+    // the width of .gy-header-brand below so the brand mark doesn't
+    // overlap the search bar / existing header buttons.
+    padding-left: 200px;
+}
+
+.gy-header-brand {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none; // decorative only, never blocks clicks
+    z-index: 3;
+
+    img {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        flex: none;
+    }
+}
+
+.gy-wordmark-block {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.gy-wordmark {
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+}
+
+.gy-word-1 {
+    color: var(--gy-text);
+}
+
+.gy-word-2 {
+    color: var(--gy-red);
+    margin-left: 2px;
+}
+
+.gy-tagline {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--gy-red);
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   2. CATEGORY TABS (pill row: "Paket Recomended", "Paket Crispy", ...)
+   Reference: active category = filled solid red pill + white icon/text.
+   Inactive = white pill, thin gray border, colored icon (icon color itself
+   comes from pos_category_icon / pos_category_icon_image on the model —
+   this only styles the pill container, not the icon glyph color).
+   ------------------------------------------------------------------------- */
+.pos .categories,
+.pos .category-list {
+    background: transparent;
+    gap: 10px;
+}
+
+.pos .category-button,
+.pos .category-simple-button {
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-pill);
+    color: var(--gy-text);
+    font-weight: 600;
+    box-shadow: var(--gy-shadow);
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &.selected,
+    &.active {
+        background: linear-gradient(135deg, var(--gy-red-2), var(--gy-red));
+        border-color: transparent;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(232, 67, 47, 0.28);
+
+        // Icon glyph (font-icon or <img> from pos_category_icon_image)
+        // should flip to white when the pill is active.
+        i,
+        .fa,
+        img {
+            filter: brightness(0) invert(1);
+        }
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   3. PRODUCT GRID + PRODUCT CARD
+   ------------------------------------------------------------------------- */
+.pos .product-list-container,
+.pos .product-screen .leftpane {
+    background: var(--gy-bg);
+}
+
+.pos .product-list {
+    gap: 16px;
+}
+
+.pos article.product,
+.pos .product-list .product {
+    position: relative;
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--gy-shadow);
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &:hover {
+        border-color: var(--gy-border-strong);
+        box-shadow: var(--gy-shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .product-img,
+    .product-picture,
+    img {
+        border-radius: var(--gy-radius-lg) var(--gy-radius-lg) 0 0;
+        object-fit: cover;
+    }
+
+    .product-name {
+        color: var(--gy-text);
+        font-weight: 600;
+        font-size: 0.92rem;
+    }
+
+    .product-price {
+        color: var(--gy-red);
+        font-weight: 700;
+    }
+}
+
+// Round "+" add button that sits bottom-right of each card in the reference —
+// outline red circle, not filled, per the light-theme screenshot.
+.pos article.product .product-content::after,
+.pos .product-add-button {
+    background: var(--gy-surface);
+    border: 1.5px solid var(--gy-red);
+    color: var(--gy-red);
+    border-radius: var(--gy-radius-pill);
+}
+
+/* ---------------------------------------------------------------------------
+   4. PRODUCT BADGES (BEST SELLER / NEW / PEDAS)
+   These come from our own patched ProductCard template — see
+   `app/screens/product_screen/product_card_badges.xml`. Kept here so the
+   colors live with the rest of the theme tokens.
+   Light-theme treatment: solid background + thin white border (so the badge
+   still reads clearly against busy food photography), not the flat-color
+   dark-mode version.
+   ------------------------------------------------------------------------- */
+.pos .gy-badge {
+    position: absolute;
+    top: 8px;
+    z-index: 2;
+    padding: 3px 8px;
+    border: 1.5px solid #ffffff;
+    border-radius: var(--gy-radius-sm);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+
+    &.gy-badge--left {
+        left: 8px;
+    }
+
+    &.gy-badge--right {
+        right: 8px;
+    }
+
+    &.gy-badge-best-seller {
+        background: linear-gradient(135deg, var(--gy-gold-2), var(--gy-gold));
+        color: #241a02;
+    }
+
+    &.gy-badge-new {
+        background: var(--gy-green);
+        color: #ffffff;
+    }
+
+    &.gy-badge-pedas {
+        background: var(--gy-red);
+        color: #ffffff;
+    }
+}
+
+// Spice level label already rendered on the orderline by orderline_patch.xml.
+.pos .spice-level-badge {
+    color: var(--gy-red) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   5. ORDER PANEL (right side: "PESANAN", member card, cart lines, totals)
+   ------------------------------------------------------------------------- */
+.pos .product-screen .rightpane,
+.pos .order-container,
+.pos .rightpane {
+    background: var(--gy-surface);
+    border-left: 1px solid var(--gy-border);
+}
+
+.pos .order .orderline,
+.pos .orderline {
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    margin-bottom: 8px;
+    color: var(--gy-text);
+    box-shadow: var(--gy-shadow);
+
+    &.selected {
+        border-color: var(--gy-red);
+    }
+
+    .price,
+    .product-price {
+        color: var(--gy-red);
+        font-weight: 700;
+    }
+}
+
+.pos .order-summary,
+.pos .payment-status-summary,
+.pos .summary {
+    .total,
+    .value.total {
+        color: var(--gy-red);
+        font-weight: 800;
+        font-size: 1.35rem;
+    }
+
+    .subentry .value,
+    .line .value {
+        color: var(--gy-text-muted);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   5b. MEMBER CARD (avatar + name + "Verified" badge + poin loyalti)
+   NOTE: no XML patch renders this yet (Tahap 6, not started) — these rules
+   are forward-declared so the markup can drop straight in later. Wire to
+   `pos_wa_number` / `pos_wa_verified` / `pos_loyalty_points` from
+   res_partner.py when that template is built.
+   ------------------------------------------------------------------------- */
+.gy-member-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--gy-surface);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    padding: 10px 12px;
+    box-shadow: var(--gy-shadow);
+}
+
+.gy-member-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--gy-red);
+    color: #ffffff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+}
+
+.gy-member-verified {
+    color: var(--gy-green);
+    font-weight: 600;
+    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.gy-member-points {
+    margin-left: auto;
+    color: var(--gy-red);
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   6. ACTION BUTTONS (numpad, function-key row, "BAYAR" pay button)
+   ------------------------------------------------------------------------- */
+.pos .actionpad .button,
+.pos .control-buttons .control-button {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text);
+}
+
+// Primary pay / checkout button — full-width red-orange gradient bar with
+// white text in the reference, same as before, just re-tuned to the new
+// accent hues.
+.pos .actionpad .button.pay-order-button,
+.pos .actionpad .pay-order-button,
+.pos .payment-button,
+.pos .button.next {
+    background: linear-gradient(135deg, var(--gy-red-2), var(--gy-red));
+    border: none;
+    border-radius: var(--gy-radius-md);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 6px 16px rgba(232, 67, 47, 0.3);
+
+    &:hover {
+        filter: brightness(1.05);
+    }
+}
+
+.pos .numpad button,
+.pos .numpad .number-char {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    color: var(--gy-text);
+    border-radius: var(--gy-radius-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   7. STATUS BAR (bottom footer: version, online dot, printer, clock)
+   ------------------------------------------------------------------------- */
+.pos .pos-topheader ~ .status-buttons,
+.pos footer,
+.pos .order-management-status,
+.pos .pos-status-bar {
+    background: var(--gy-surface);
+    border-top: 1px solid var(--gy-border);
+    color: var(--gy-text-faint);
+    font-size: 0.75rem;
+}
+
+.pos .status-dot,
+.pos .oe_status.oe_grey.oe_status_home,
+.pos .js_connected {
+    background: var(--gy-green);
+    border-radius: 50%;
+}
+
+/* ---------------------------------------------------------------------------
+   8. LOGO HEADER — override CSS var resmi Odoo, bukan xpath patch.
+   Terkonfirmasi dari source asli: point_of_sale/.../navbar/navbar.scss
+   ------------------------------------------------------------------------- */
+.pos {
+    --navbar-logo: url("/geprekyukss_pos/static/src/img/logo.jpg");
+}
+
+/* ---------------------------------------------------------------------------
+   9. HEADER — override, sudah dicek langsung ke navbar.xml asli Odoo 19.
+   Section 1 di atas pakai nama class hasil tebakan yang ternyata nggak ada
+   di versi ini — section ini dimuat belakangan jadi menang di cascade.
+   ------------------------------------------------------------------------- */
+.pos .pos-topheader {
+    background: var(--gy-surface) !important;
+    border-bottom: 1px solid var(--gy-border) !important;
+}
+
+.pos .pos-leftheader .btn,
+.pos .pos-rightheader .btn {
+    background: var(--gy-surface-2);
+    border: 1px solid var(--gy-border);
+    color: var(--gy-text) !important;
+
+    &.active {
+        background: linear-gradient(135deg, var(--gy-red-2), var(--gy-red));
+        border-color: transparent;
+        color: #ffffff !important;
+    }
+}
+
+.pos .pos-rightheader input {
+    background: var(--gy-surface-2) !important;
+    border: 1px solid var(--gy-border) !important;
+    border-radius: var(--gy-radius-md);
+    color: var(--gy-text) !important;
+
+    &::placeholder {
+        color: var(--gy-text-faint);
+    }
+}
+
+.pos .status-buttons {
+    color: var(--gy-text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   10. FIX — orderline text invisible (Odoo default menang atas warna kita
+   karena kita tidak pakai !important). Dipaksa di sini biar pasti kepakai
+   di semua elemen anak orderline. Sama fix-nya seperti v1, cuma warnanya
+   yang disesuaikan ke light theme (teks gelap di atas card putih, bukan
+   teks terang di atas card gelap).
+   ------------------------------------------------------------------------- */
+.pos .orderline,
+.pos .orderline *,
+.pos .order .orderline,
+.pos .order .orderline * {
+    color: var(--gy-text) !important;
+}
+
+.pos .orderline .price,
+.pos .orderline .product-price,
+.pos .order .orderline .price,
+.pos .order .orderline .product-price {
+    color: var(--gy-red) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   11. FIX — gambar produk tidak muncul di kartu.
+   UPDATE: root cause ternyata bukan CSS sama sekali — "Show Product Images"
+   belum dicentang di POS Settings. Sudah confirmed solved di sisi Odoo
+   Settings. Aturan di bawah ini TETAP dipertahankan karena masih berguna
+   sebagai safety net (mencegah container collapse ke tinggi 0 kalau ada
+   produk tanpa gambar / CSS lain yang belum ketahuan konflik), bukan lagi
+   fix utama.
+   ------------------------------------------------------------------------- */
+.pos article.product .product-img,
+.pos article.product .product-picture,
+.pos article.product img,
+.pos .product-list .product img {
+    display: block !important;
+    width: 100% !important;
+    height: 110px !important;
+    object-fit: cover !important;
+}
+
+
+=== models.js (overrides) ===
+/** @odoo-module */
+
+import { patch } from "@web/core/utils/patch";
+import { PosStore } from "@point_of_sale/app/store/pos_store";
+import { Orderline } from "@point_of_sale/app/generic_components/orderline/orderline";
+import { SpiceLevelPopup, SPICE_LEVELS } from "@geprekyukss_pos/app/screens/product_screen/spice_level_popup";
+
+const SPICE_LABEL_BY_VALUE = Object.fromEntries(SPICE_LEVELS.map((l) => [l.value, l.label]));
+
+// Tambah getter di komponen Orderline (dipakai bareng layar kasir & struk)
+// supaya template orderline_patch.xml bisa nampilin label "Pedas", "Extra
+// Pedas", dst dari kode "1".."5" yang tersimpan di field spice_level.
+patch(Orderline.prototype, {
+    get spiceLevelLabel() {
+        return SPICE_LABEL_BY_VALUE[this.props.line.spice_level] || "";
+    },
+});
+
+// CATATAN KOMPATIBILITAS:
+// Titik ekstensi resmi untuk "apa yang terjadi saat produk ditambahkan ke
+// order" di Odoo 17-19 ada di service PosStore, method addLineToCurrentOrder
+// (dipakai juga oleh fitur bawaan seperti tracking lot/serial, timbangan,
+// dan product configurator). Kalau setelah upgrade Odoo nama method ini
+// berubah, cara paling cepat cek: buka Codespace, jalankan
+//   grep -rn "addLineToCurrentOrder" /path/ke/source/point_of_sale/static/src/app/services/pos_store.js
+// lalu sesuaikan nama method yang di-patch di bawah ini.
+patch(PosStore.prototype, {
+    async addLineToCurrentOrder(vals, opts = {}, configure = true) {
+        const product = vals.product_id;
+
+        if (product && product.pos_spicy) {
+            const spiceLevel = await new Promise((resolve) => {
+                this.dialog.add(SpiceLevelPopup, {
+                    productName: product.display_name,
+                    getPayload: (value) => resolve(value),
+                });
+            });
+
+            // Kasir batal pilih level -> jangan tambahkan produk ke order.
+            if (!spiceLevel) {
+                return;
+            }
+
+            vals = { ...vals, spice_level: spiceLevel };
+        }
+
+        return super.addLineToCurrentOrder(vals, opts, configure);
+    },
+});
+
+
+=== orderline_patch.xml ===
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!--
+        Di-inherit dari template point_of_sale.Orderline, yang dipakai sama-sama
+        oleh layar kasir (ProductScreen) DAN struk (OrderReceipt) — jadi cukup
+        patch di satu tempat ini, otomatis muncul di dua-duanya.
+
+        Posisi xpath ini menempel di dekat slot customerNote (lihat contoh
+        pemakaiannya di point_of_sale/static/src/app/screens/receipt_screen/
+        receipt/order_receipt.xml versi 19.0, yang menyisipkan <li> serupa).
+        Kalau xpath di bawah gagal match setelah upgrade Odoo, cek ulang
+        struktur asli template "point_of_sale.Orderline" di source yang
+        ter-install dan sesuaikan selector-nya.
+    -->
+    <t t-inherit="point_of_sale.Orderline" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('product-name')]" position="after">
+            <div t-if="props.line.spice_level" class="spice-level-badge small fw-bold text-danger">
+                <i class="fa fa-fire me-1" role="img" aria-label="Level Pedas"/>
+                <t t-esc="spiceLevelLabel"/>
+            </div>
+        </xpath>
+    </t>
+</templates>
+
+
+=== product_card_badges.xml ===
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!--
+        Inherits point_of_sale.ProductCard to add the small corner badges
+        seen in the reference screenshot ("BEST SELLER" gold, "NEW" green,
+        "PEDAS" red). Colors/positioning live in scss/pos_theme.scss under
+        the ".gy-badge" section.
+
+        NOTE ON THE XPATH + PROPS BELOW — two assumptions to verify on your
+        actual 19.0 build (open dev tools / dev mode > Technical > Views,
+        search "ProductCard", and inspect the component's props definition):
+          1. Root node: assumed to be `<article class="product" .../>`,
+             stable since the Odoo 17 OWL rewrite.
+          2. Prop name: assumed the card receives the full product record
+             as `props.product` (so our fields read as
+             `props.product.pos_badge` / `props.product.pos_spicy`, which
+             only exist because product_template.py registers them in
+             `_load_pos_data_fields`). If ProductCard instead receives
+             flattened props, drop the `.product.` segment below.
+    -->
+    <t t-inherit="point_of_sale.ProductCard" t-inherit-mode="extension">
+        <xpath expr="//article" position="inside">
+            <div t-if="props.product.pos_badge and props.product.pos_badge != 'none'"
+                 t-attf-class="gy-badge gy-badge--left gy-badge-{{props.product.pos_badge.replace('_', '-')}}">
+                <t t-if="props.product.pos_badge === 'best_seller'">
+                    <i class="fa fa-star" role="img" aria-label="Best Seller"/> BEST SELLER
+                </t>
+                <t t-if="props.product.pos_badge === 'new'">NEW</t>
+            </div>
+            <div t-if="props.product.pos_spicy" class="gy-badge gy-badge--right gy-badge-pedas">
+                <i class="fa fa-fire" role="img" aria-label="Pedas"/> PEDAS
+            </div>
+        </xpath>
+    </t>
+</templates>
+
+
+=== spice_level_popup.xml ===
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="geprekyukss_pos.SpiceLevelPopup">
+        <Dialog title="'Pilih Level Pedas — ' + props.productName" size="'sm'">
+            <div class="d-flex flex-column gap-2 p-2">
+                <button t-foreach="levels" t-as="lvl" t-key="lvl.value"
+                        class="btn btn-outline-danger text-start py-2"
+                        t-on-click="() => this.selectLevel(lvl.value)">
+                    <t t-esc="lvl.label"/>
+                </button>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-secondary" t-on-click="cancel">Batal</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>
+
+
+=== spice_level_popup.js ===
+/** @odoo-module */
+
+import { Component } from "@odoo/owl";
+import { Dialog } from "@web/core/dialog/dialog";
+
+export const SPICE_LEVELS = [
+    { value: "1", label: "Anti Pedas" },
+    { value: "2", label: "Sedang" },
+    { value: "3", label: "Pedas" },
+    { value: "4", label: "Extra Pedas" },
+    { value: "5", label: "Level Neraka" },
+];
+
+// Popup dibangun di atas komponen Dialog generik dari @web/core (bukan
+// service "popup" lama yang sudah dihapus dari POS sejak refactor OWL).
+// Dipanggil lewat this.dialog.add(SpiceLevelPopup, { productName, getPayload }).
+export class SpiceLevelPopup extends Component {
+    static template = "geprekyukss_pos.SpiceLevelPopup";
+    static components = { Dialog };
+    static props = {
+        productName: String,
+        close: Function,
+        getPayload: Function,
+    };
+
+    setup() {
+        this.levels = SPICE_LEVELS;
+    }
+
+    selectLevel(value) {
+        this.props.getPayload(value);
+        this.props.close();
+    }
+
+    cancel() {
+        this.props.getPayload(null);
+        this.props.close();
+    }
+}
+
+
+=== models/product_template.py ===
+from odoo import fields, models
+
+POS_BADGES = [
+    ("none", "Tidak Ada"),
+    ("best_seller", "Best Seller"),
+    ("new", "Baru"),
+]
+
+
+class ProductTemplate(models.Model):
+    _inherit = "product.template"
+
+    pos_spicy = fields.Boolean(
+        string="Bisa Pilih Level Pedas",
+        help=(
+            "Kalau dicentang, produk ini akan memunculkan popup pilihan "
+            "level pedas (1-5) saat ditambahkan ke pesanan di kasir POS. "
+            "Cocok untuk semua varian Ayam Geprek."
+        ),
+        default=False,
+    )
+
+    pos_badge = fields.Selection(
+        POS_BADGES,
+        string="Badge Produk",
+        default="none",
+        help=(
+            "Menampilkan label kecil di pojok kartu produk pada layar kasir "
+            "POS, mis. 'BEST SELLER' (emas) atau 'NEW' (hijau). Badge "
+            "'PEDAS' muncul otomatis kalau 'Bisa Pilih Level Pedas' dicentang, "
+            "jadi tidak perlu diatur di sini."
+        ),
+    )
+
+    def _load_pos_data_fields(self, config_id):
+        # Sama seperti catatan di pos_order.py / res_partner.py: field custom
+        # HARUS didaftarkan di sini juga supaya ikut ter-load ke data produk
+        # di kasir POS. Tanpa ini, pos_spicy & pos_badge akan selalu terlihat
+        # "falsy"/None di frontend walaupun sudah diisi di form produk —
+        # sebelumnya pos_spicy belum terdaftar di sini sama sekali, jadi popup
+        # level pedas tidak akan pernah muncul di kasir (bug, sudah diperbaiki
+        # di sini).
+        fields_list = super()._load_pos_data_fields(config_id)
+        return fields_list + ["pos_spicy", "pos_badge"]
+
+
+=== models/res_partner.py ===
+from odoo import fields, models
+
+
+class ResPartner(models.Model):
+    _inherit = "res.partner"
+
+    pos_wa_number = fields.Char(
+        string="Nomor WhatsApp (Member)",
+        help="Nomor WA yang dipakai untuk verifikasi member di kasir POS.",
+    )
+    pos_wa_verified = fields.Boolean(
+        string="WA Terverifikasi",
+        default=False,
+        help="Dicentang otomatis setelah pelanggan berhasil verifikasi OTP WA.",
+    )
+    pos_loyalty_points = fields.Integer(
+        string="Poin Loyalti (Manual)",
+        default=0,
+        help=(
+            "Placeholder poin loyalti sederhana. Kalau butuh sistem poin/diskon "
+            "yang lebih lengkap (reward, kupon, tier member), pertimbangkan pakai "
+            "modul bawaan Odoo 'loyalty' (Loyalty & Referral / Coupon) daripada "
+            "reinvent lewat field ini — field ini cukup untuk MVP sederhana."
+        ),
+    )
+
+    def _load_pos_data_fields(self, config_id):
+        fields_list = super()._load_pos_data_fields(config_id)
+        return fields_list + ["pos_wa_number", "pos_wa_verified", "pos_loyalty_points"]
+
+    # -------------------------------------------------------------------
+    # CATATAN PENTING soal OTP/verifikasi WhatsApp:
+    # Odoo tidak punya built-in pengiriman OTP via WhatsApp. Untuk verifikasi
+    # yang beneran (bukan simulasi seperti di preview), butuh integrasi ke
+    # provider pihak ketiga, misalnya:
+    #   - WhatsApp Business API resmi (Meta/Twilio/360dialog)
+    #   - Provider lokal Indonesia (Fonnte, Wablas, dll — pastikan yang dipakai
+    #     sesuai kebijakan WhatsApp Business, bukan API tidak resmi)
+    # Alurnya nanti: JS di kasir panggil method Python (lewat RPC) -> method itu
+    # request OTP ke API provider -> simpan kode+expiry sementara (mis. di cache
+    # atau field terenkripsi) -> endpoint verify dipanggil balik dari kasir untuk
+    # cocokkan kode -> set pos_wa_verified = True.
+    # Bagian ini sengaja belum diimplementasikan di sini karena butuh keputusan
+    # provider WA yang dipilih dulu.
+    # -------------------------------------------------------------------
+
+
+=== models/pos_category.py ===
+from odoo import fields, models
+
+CATEGORY_ICONS = [
+    ("none", "Tidak Ada"),
+    ("fire", "Api (Rekomendasi/Pedas)"),
+    ("drink", "Minuman"),
+    ("grid", "Lainnya / Grid"),
+]
+
+
+class PosCategory(models.Model):
+    _inherit = "pos.category"
+
+    pos_category_icon = fields.Selection(
+        CATEGORY_ICONS,
+        string="Ikon Preset",
+        default="none",
+        help=(
+            "Ikon bawaan (font-icon) yang tampil di depan nama kategori pada "
+            "tab horizontal di kasir POS. Kalau kategorimu butuh ikon yang "
+            "tidak ada di preset ini (mis. ayam/drumstick/mangkuk seperti di "
+            "screenshot referensi), upload ikon custom di field "
+            "'Ikon Kustom' di bawah — kalau diisi, ikon kustom itu yang "
+            "dipakai dan preset ini diabaikan."
+        ),
+    )
+
+    pos_category_icon_image = fields.Image(
+        string="Ikon Kustom (opsional)",
+        max_width=64,
+        max_height=64,
+        help=(
+            "Upload PNG/SVG persegi transparan (idealnya 64x64) untuk ikon "
+            "kategori yang tidak tersedia di preset font-icon bawaan Odoo "
+            "(mis. ikon ayam untuk 'Paket Crispy', drumstick untuk 'Single "
+            "Ayam', mangkuk untuk 'Side Dish' — lihat screenshot referensi). "
+            "Kalau kosong, sistem pakai 'Ikon Preset' di atas; kalau "
+            "keduanya kosong, tab kategori tampil tanpa ikon."
+        ),
+    )
+
+    def _load_pos_data_fields(self, config_id):
+        fields_list = super()._load_pos_data_fields(config_id)
+        return fields_list + ["pos_category_icon", "pos_category_icon_image"]
+
+
+=== models/pos_order.py ===
+from odoo import fields, models
+
+SPICE_LEVELS = [
+    ("1", "Anti Pedas"),
+    ("2", "Sedang"),
+    ("3", "Pedas"),
+    ("4", "Extra Pedas"),
+    ("5", "Level Neraka"),
+]
+
+
+class PosOrderLine(models.Model):
+    _inherit = "pos.order.line"
+
+    spice_level = fields.Selection(
+        SPICE_LEVELS,
+        string="Level Pedas",
+        help="Level pedas yang dipilih kasir/pelanggan saat order dibuat di POS.",
+    )
+
+    def _load_pos_data_fields(self, config_id):
+        # PENTING: field baru harus didaftarkan di sini juga, atau field
+        # spice_level tidak akan ikut ter-load ke frontend POS maupun
+        # ter-terima balik saat order disinkronkan dari kasir ke server.
+        # Nama method ini konsisten di Odoo 17-19 (dipanggil per model
+        # lewat models/pos_session.py -> _load_pos_data). Kalau setelah
+        # instal ternyata spice_level tidak muncul di record pos.order.line,
+        # cek ulang nama method ini di source point_of_sale/models/pos_order.py
+        # versi yang benar-benar ter-install (bisa beda 1-2 kata antar rilis).
+        fields_list = super()._load_pos_data_fields(config_id)
+        return fields_list + ["spice_level"]
+
+
+=== models/__init__.py ===
+from . import product_template
+from . import pos_order
+from . import res_partner
+from . import pos_category
+
+
+=== views/pos_category_views.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherit form view bawaan pos.category. ID di bawah diasumsikan
+        "point_of_sale.product_pos_category_form_view" (nama view form
+        kategori POS di Odoo 17-19). Kalau xpath ini gagal install (error
+        "record not found" saat -u geprekyukss_pos), buka Settings >
+        Technical > Views (aktifkan dev mode dulu), cari model
+        "pos.category", lihat ID view form aslinya, lalu ganti nilai
+        "ref" di bawah.
+    -->
+    <record id="pos_category_form_view_gy_icon" model="ir.ui.view">
+        <field name="name">pos.category.form.gy.icon</field>
+        <field name="model">pos.category</field>
+        <field name="inherit_id" ref="point_of_sale.product_pos_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Tampilan Tab Kasir (Geprekyukss)">
+                    <field name="pos_category_icon"/>
+                    <field name="pos_category_icon_image" widget="image"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
+
+=== views/res_partner_views.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_partner_form_view_pos_wa" model="ir.ui.view">
+        <field name="name">res.partner.form.pos.wa</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="pos_wa_number" string="No. WA Member"/>
+                <field name="pos_wa_verified" readonly="1"/>
+                <field name="pos_loyalty_points"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
+
+=== views/product_template_views.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_pos_spicy" model="ir.ui.view">
+        <field name="name">product.template.form.pos.spicy</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="point_of_sale.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Ditaruh di tab Point of Sale, setelah field available_in_pos -->
+            <xpath expr="//field[@name='available_in_pos']" position="after">
+                <field name="pos_spicy"
+                       invisible="not available_in_pos"
+                       help="Munculkan popup level pedas (1-5) saat produk ini ditambahkan di kasir"/>
+                <field name="pos_badge"
+                       invisible="not available_in_pos"
+                       help="Label kecil (Best Seller / Baru) yang tampil di kartu produk pada kasir POS"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

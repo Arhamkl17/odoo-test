@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!--
+        Inherits point_of_sale.ProductCard to add:
+        1. Small corner badges (BEST SELLER/NEW/PEDAS).
+        2. Product price — Odoo 19 stock ProductCard does NOT render a price
+           element at all, confirmed by reading product_card.xml source.
+           props.product carries the full product record (list_price included)
+           because ProductScreen passes product="product" to <ProductCard/>.
+    -->
+    <t t-inherit="point_of_sale.ProductCard" t-inherit-mode="extension">
+        <xpath expr="//article" position="inside">
+            <div t-if="props.product.pos_badge and props.product.pos_badge != 'none'"
+                 t-attf-class="gy-badge gy-badge--left gy-badge-{{props.product.pos_badge.replace('_', '-')}}">
+                <t t-if="props.product.pos_badge === 'best_seller'">
+                    <i class="fa fa-star" role="img" aria-label="Best Seller"/> BEST SELLER
+                </t>
+                <t t-if="props.product.pos_badge === 'new'">NEW</t>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('product-name')]" position="after">
+            <div class="product-price fw-bold"
+                 t-if="props.product.list_price"
+                 t-esc="this.env.utils.formatCurrency(props.product.list_price)"/>
+        </xpath>
+    </t>
+</templates>

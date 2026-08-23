@@ -1,0 +1,12 @@
+time="2026-08-23T02:36:16Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+     1	<?xml version="1.0" encoding="UTF-8"?>
+     2	<templates id="template" xml:space="preserve">
+     3	    <t t-inherit="point_of_sale.CategorySelector" t-inherit-mode="extension">
+     4	        <xpath expr="//span[@t-if='category.name']" position="before">
+     5	            <span t-if="category.gyIcon and !category.gyIconIsImage"
+     6	                class="gy-category-emoji me-1" t-esc="category.gyIcon"/>
+     7	            <img t-if="category.gyIcon and category.gyIconIsImage"
+     8	                t-att-src="category.gyIcon" class="gy-category-emoji-img me-1" alt="icon"/>
+     9	        </xpath>
+    10	    </t>
+    11	</templates>

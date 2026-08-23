@@ -1,0 +1,7 @@
+time="2026-08-22T15:12:50Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+/mnt/extra-addons/geprekyukss_pos/static/src/scss/pos_theme.scss:193:   comes from pos_category_icon / pos_category_icon_image on the model —
+/mnt/extra-addons/geprekyukss_pos/models/pos_category.py:14:    pos_category_icon = fields.Selection(
+/mnt/extra-addons/geprekyukss_pos/models/pos_category.py:28:    pos_category_icon_image = fields.Image(
+/mnt/extra-addons/geprekyukss_pos/models/pos_category.py:44:        return fields_list + ["pos_category_icon", "pos_category_icon_image"]
+/mnt/extra-addons/geprekyukss_pos/views/pos_category_views.xml:19:                    <field name="pos_category_icon"/>
+/mnt/extra-addons/geprekyukss_pos/views/pos_category_views.xml:20:                    <field name="pos_category_icon_image" widget="image"/>

@@ -1,0 +1,28 @@
+time="2026-08-22T15:00:29Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+     1	<?xml version="1.0" encoding="UTF-8" ?>
+     2	<templates id="template" xml:space="preserve">
+     3	    <t t-name="point_of_sale.CategorySelector">
+     4	        <div t-attf-class="product-list category-list d-grid gap-1 gap-lg-2 p-2">
+     5	            <t t-foreach="this.getCategoriesAndSub()" t-as="category" t-key="category.id">
+     6	                <button t-on-click="() => this.pos.setSelectedCategory(category.id)"
+     7	                    t-attf-class="o_colorlist_item_color_{{category.color or 'none'}}"
+     8	                    t-att-class="{
+     9	                        'border-0': category.isChildren and !this.isAncestorOrSelected(category), 
+    10	                        'opacity-75 border-0': !category.isChildren and !category.isSelected,
+    11	                        'justify-content-center': ui.isSmall
+    12	                    }"
+    13	                    class="category-button p-1 btn btn-light d-flex justify-content-around align-items-center rounded-3 gap-1">
+    14	                    <div t-if="showCategoryImg(category)" class="overflow-hidden flex-shrink-0 ratio ratio-1x1" style="width:40%;">
+    15	                        <img t-if="category.imgSrc and !ui.isSmall" t-att-src="category.imgSrc"
+    16	                            class="category-img-thumb h-100 rounded-3 object-fit-cover pe-none"
+    17	                            alt="Category"
+    18	                        />
+    19	                    </div>
+    20	                    <div class="line-clamp-3" t-att-class="{'w-100': !showCategoryImg(category)}" t-att-style="{'width: 60%;': showCategoryImg(category)}">
+    21	                        <span t-if="category.name" class="text-center" t-esc="category.name" />
+    22	                    </div>
+    23	                </button>
+    24	            </t>
+    25	        </div>
+    26	    </t>
+    27	</templates>

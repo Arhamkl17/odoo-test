@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-inherit="point_of_sale.CategorySelector" t-inherit-mode="extension">
+        <xpath expr="//span[@t-if='category.name']" position="before">
+            <span t-if="category.gyIcon and !category.gyIconIsImage"
+                class="gy-category-emoji me-1" t-esc="category.gyIcon"/>
+            <img t-if="category.gyIcon and category.gyIconIsImage"
+                t-att-src="category.gyIcon" class="gy-category-emoji-img me-1" alt="icon"/>
+        </xpath>
+    </t>
+</templates>

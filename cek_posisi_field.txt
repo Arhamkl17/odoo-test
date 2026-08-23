@@ -1,0 +1,39 @@
+time="2026-08-18T00:07:39Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+2026-08-18 00:07:40,149 518 INFO ? odoo: Odoo version 19.0-20260810 
+2026-08-18 00:07:40,150 518 INFO ? odoo: Using configuration file at /etc/odoo/odoo.conf 
+2026-08-18 00:07:40,150 518 INFO ? odoo: addons paths: _NamespacePath(['/usr/lib/python3/dist-packages/odoo/addons', '/var/lib/odoo/addons/19.0', '/mnt/extra-addons', '/usr/lib/python3/dist-packages/addons']) 
+2026-08-18 00:07:40,150 518 INFO ? odoo: database: odoo@db:default 
+2026-08-18 00:07:40,458 518 INFO ? odoo.service.server: Initiating shutdown 
+2026-08-18 00:07:40,458 518 INFO ? odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-08-18 00:07:40,484 518 INFO Test1 odoo.modules.loading: loading 1 modules... 
+2026-08-18 00:07:40,489 518 INFO Test1 odoo.modules.loading: 1 modules loaded in 0.00s, 0 queries (+0 extra) 
+2026-08-18 00:07:40,507 518 INFO Test1 odoo.modules.loading: loading 73 modules... 
+2026-08-18 00:07:41,141 518 INFO Test1 odoo.modules.loading: 73 modules loaded in 0.63s, 0 queries (+0 extra) 
+2026-08-18 00:07:41,413 518 INFO Test1 odoo.modules.loading: Modules loaded. 
+2026-08-18 00:07:41,485 518 INFO Test1 odoo.registry: Registry loaded in 1.026s 
+                          <field class="text-break" name="name" options="{'line_breaks': False}" widget="text" placeholder="contohnya Cheese Burger"/>
+                            </div>
+                        </h1>
+                    </div>
+                    <div name="options">
+                        <span name="sale_option" class="d-inline-flex">
+                            <field name="sale_ok" on_change="1"/>
+                            <label for="sale_ok"/>
+                        </span>
+                <span class="d-inline-block">
+                    <field name="available_in_pos" on_change="1"/>
+                <field name="pos_spicy" invisible="not available_in_pos" help="Munculkan popup level pedas (1-5) saat produk ini ditambahkan di kasir"/>
+                <field name="pos_badge" invisible="not available_in_pos" help="Label kecil (Best Seller / Baru) yang tampil di kartu produk pada kasir POS"/>
+                    <label for="available_in_pos" string="POS"/>
+                </span>
+                    <span class="d-inline-flex" invisible="type == 'combo'">
+                        <field name="purchase_ok"/>
+                        <label for="purchase_ok"/>
+                    </span>
+                    </div>
+                    <notebook>
+                        <page string="Informasi Umum" name="general_information">
+                            <group>
+                                <group name="group_general">
+                                    <field name="active" invisible="1"/>
+                                    <field name="type" widget="r

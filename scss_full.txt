@@ -1,0 +1,437 @@
+docker compose exec odoo find / -ipath "*point_of_sale*product_card*.js" 2>/dev/null     1	/* =============================================================================
+     2	   GEPREK YUKSS — POS DARK THEME
+     3	   =============================================================================
+     4	   Restyles the stock Odoo 19 Point of Sale screen to match the reference
+     5	   screenshot (dark background, orange/gold accents, rounded cards).
+     6	
+     7	   IMPORTANT — READ BEFORE TWEAKING:
+     8	   Odoo's POS DOM structure/class names are NOT part of a stable public API
+     9	   and shift a little between minor versions (17 -> 18 -> 19). The selectors
+    10	   below are written against the structure that has been stable since the
+    11	   OWL rewrite (Odoo 17+): `.product-screen`, `.product-list`, `article.product`,
+    12	   `.category-button`, `.order-container`, `.orderline`, `.actionpad`, `.numpad`.
+    13	
+    14	   If, after installing this on your actual Odoo 19 instance, something does
+    15	   NOT pick up the new look:
+    16	     1. Open the browser inspector on that element.
+    17	     2. Find its real class name in your installed version.
+    18	     3. Add/replace the selector in the matching section below.
+    19	   Everything here is additive (we only override colors/spacing/radius on
+    20	   top of Odoo's existing classes), so a missed selector just means "that
+    21	   one element stays default" — nothing breaks.
+    22	   ============================================================================= */
+    23	
+    24	:root {
+    25	    // ---- Design tokens extracted from the reference screenshot -------------
+    26	    --gy-bg: #0b0b0d;
+    27	    --gy-surface: #141416;
+    28	    --gy-surface-2: #1c1c1f;
+    29	    --gy-surface-3: #232326;
+    30	    --gy-border: rgba(255, 255, 255, 0.08);
+    31	    --gy-border-strong: rgba(255, 255, 255, 0.14);
+    32	
+    33	    --gy-orange: #ff5a1f;
+    34	    --gy-orange-2: #ff7a33;
+    35	    --gy-gold: #f0b429;
+    36	    --gy-red: #e5484d;
+    37	    --gy-green: #3ecf6e;
+    38	
+    39	    --gy-text: #f5f5f6;
+    40	    --gy-text-muted: #9a9aa0;
+    41	    --gy-text-faint: #6f6f76;
+    42	
+    43	    --gy-radius-lg: 18px;
+    44	    --gy-radius-md: 12px;
+    45	    --gy-radius-sm: 8px;
+    46	    --gy-radius-pill: 999px;
+    47	
+    48	    --gy-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    49	}
+    50	
+    51	// Base font stack. The reference screenshot uses a rounded/geometric grotesk
+    52	// (looks like Poppins/Inter). We default to a system stack that renders
+    53	// close to that without a network font request. Swap this for @font-face
+    54	// with a bundled woff2 if you need an exact match.
+    55	.pos {
+    56	    background: var(--gy-bg) !important;
+    57	    color: var(--gy-text);
+    58	    font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont,
+    59	        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    60	}
+    61	
+    62	/* ---------------------------------------------------------------------------
+    63	   1. HEADER (logo / search / member / cashier / theme toggle)
+    64	   ------------------------------------------------------------------------- */
+    65	.pos .pos-topheader,
+    66	.pos header.header-cashier,
+    67	.pos .header-cashier,
+    68	.pos-content > header {
+    69	    background: var(--gy-surface);
+    70	    border-bottom: 1px solid var(--gy-border);
+    71	    box-shadow: none;
+    72	}
+    73	
+    74	.pos input.searchbox,
+    75	.pos .searchbox input,
+    76	.pos input[placeholder*="Search"] {
+    77	    background: var(--gy-surface-2);
+    78	    border: 1px solid var(--gy-border);
+    79	    border-radius: var(--gy-radius-md);
+    80	    color: var(--gy-text);
+    81	
+    82	    &::placeholder {
+    83	        color: var(--gy-text-faint);
+    84	    }
+    85	}
+    86	
+    87	.pos .header-button,
+    88	.pos .username,
+    89	.pos .cashier-name {
+    90	    background: var(--gy-surface-2);
+    91	    border: 1px solid var(--gy-border);
+    92	    border-radius: var(--gy-radius-md);
+    93	    color: var(--gy-text);
+    94	}
+    95	
+    96	/* ---------------------------------------------------------------------------
+    97	   1b. HEADER BRAND (logo mark + wordmark + tagline)
+    98	   Added out-of-order at the user's request, alongside Stage 2. See
+    99	   header_brand_patch.xml -- the brand block is absolutely positioned so it
+   100	   never depends on exact child ordering inside the header.
+   101	   ------------------------------------------------------------------------- */
+   102	.pos .pos-topheader,
+   103	.pos header.header-cashier,
+   104	.pos .header-cashier {
+   105	    position: relative;
+   106	    // Adjust this once you see it on your phone -- it just needs to clear
+   107	    // the width of .gy-header-brand below so the brand mark doesn't
+   108	    // overlap the search bar / existing header buttons.
+   109	    padding-left: 200px;
+   110	}
+   111	
+   112	.gy-header-brand {
+   113	    position: absolute;
+   114	    left: 16px;
+   115	    top: 50%;
+   116	    transform: translateY(-50%);
+   117	    display: flex;
+   118	    align-items: center;
+   119	    gap: 10px;
+   120	    pointer-events: none; // decorative only, never blocks clicks
+   121	    z-index: 3;
+   122	
+   123	    img {
+   124	        width: 34px;
+   125	        height: 34px;
+   126	        object-fit: contain;
+   127	        flex: none;
+   128	    }
+   129	}
+   130	
+   131	.gy-wordmark-block {
+   132	    display: flex;
+   133	    flex-direction: column;
+   134	    line-height: 1.05;
+   135	}
+   136	
+   137	.gy-wordmark {
+   138	    font-weight: 800;
+   139	    font-size: 1.05rem;
+   140	    letter-spacing: 0.01em;
+   141	}
+   142	
+   143	.gy-word-1 {
+   144	    color: var(--gy-text);
+   145	}
+   146	
+   147	.gy-word-2 {
+   148	    color: var(--gy-orange);
+   149	    margin-left: 2px;
+   150	}
+   151	
+   152	.gy-tagline {
+   153	    font-size: 0.5rem;
+   154	    font-weight: 700;
+   155	    letter-spacing: 0.03em;
+   156	    color: var(--gy-red);
+   157	    margin-top: 1px;
+   158	    white-space: nowrap;
+   159	}
+   160	
+   161	/* ---------------------------------------------------------------------------
+   162	   2. CATEGORY TABS (pill row: "Paket Recomended", "Paket Crispy", ...)
+   163	   ------------------------------------------------------------------------- */
+   164	.pos .categories,
+   165	.pos .category-list {
+   166	    background: transparent;
+   167	    gap: 10px;
+   168	}
+   169	
+   170	.pos .category-button,
+   171	.pos .category-simple-button {
+   172	    background: var(--gy-surface);
+   173	    border: 1px solid var(--gy-border);
+   174	    border-radius: var(--gy-radius-md);
+   175	    color: var(--gy-text-muted);
+   176	    font-weight: 600;
+   177	    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+   178	
+   179	    &.selected,
+   180	    &.active {
+   181	        background: rgba(255, 90, 31, 0.12);
+   182	        border-color: var(--gy-orange);
+   183	        color: var(--gy-gold);
+   184	    }
+   185	}
+   186	
+   187	/* ---------------------------------------------------------------------------
+   188	   3. PRODUCT GRID + PRODUCT CARD
+   189	   ------------------------------------------------------------------------- */
+   190	.pos .product-list-container,
+   191	.pos .product-screen .leftpane {
+   192	    background: var(--gy-bg);
+   193	}
+   194	
+   195	.pos .product-list {
+   196	    gap: 16px;
+   197	}
+   198	
+   199	.pos article.product,
+   200	.pos .product-list .product {
+   201	    position: relative;
+   202	    background: var(--gy-surface);
+   203	    border: 1px solid var(--gy-border);
+   204	    border-radius: var(--gy-radius-lg);
+   205	    overflow: hidden;
+   206	    box-shadow: var(--gy-shadow);
+   207	    transition: transform 0.12s ease, border-color 0.12s ease;
+   208	
+   209	    &:hover {
+   210	        border-color: var(--gy-border-strong);
+   211	        transform: translateY(-2px);
+   212	    }
+   213	
+   214	    .product-img,
+   215	    .product-picture,
+   216	    img {
+   217	        border-radius: var(--gy-radius-lg) var(--gy-radius-lg) 0 0;
+   218	        object-fit: cover;
+   219	    }
+   220	
+   221	    .product-name {
+   222	        color: var(--gy-text);
+   223	        font-weight: 600;
+   224	        font-size: 0.92rem;
+   225	    }
+   226	
+   227	    .product-price {
+   228	        color: var(--gy-gold);
+   229	        font-weight: 700;
+   230	    }
+   231	}
+   232	
+   233	// Round "+" add button that sits bottom-right of each card in the reference.
+   234	.pos article.product .product-content::after,
+   235	.pos .product-add-button {
+   236	    background: var(--gy-surface-3);
+   237	    border: 1px solid var(--gy-border-strong);
+   238	    color: var(--gy-gold);
+   239	    border-radius: var(--gy-radius-pill);
+   240	}
+   241	
+   242	/* ---------------------------------------------------------------------------
+   243	   4. PRODUCT BADGES (BEST SELLER / NEW / PEDAS)
+   244	   These come from our own patched ProductCard template — see
+   245	   `app/screens/product_screen/product_card_badges.xml`. Kept here so the
+   246	   colors live with the rest of the theme tokens.
+   247	   ------------------------------------------------------------------------- */
+   248	.pos .gy-badge {
+   249	    position: absolute;
+   250	    top: 8px;
+   251	    z-index: 2;
+   252	    padding: 3px 8px;
+   253	    border-radius: var(--gy-radius-sm);
+   254	    font-size: 0.68rem;
+   255	    font-weight: 700;
+   256	    letter-spacing: 0.02em;
+   257	    display: inline-flex;
+   258	    align-items: center;
+   259	    gap: 4px;
+   260	    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+   261	
+   262	    &.gy-badge--left {
+   263	        left: 8px;
+   264	    }
+   265	
+   266	    &.gy-badge--right {
+   267	        right: 8px;
+   268	    }
+   269	
+   270	    &.gy-badge-best-seller {
+   271	        background: var(--gy-gold);
+   272	        color: #241a02;
+   273	    }
+   274	
+   275	    &.gy-badge-new {
+   276	        background: var(--gy-green);
+   277	        color: #052210;
+   278	    }
+   279	
+   280	    &.gy-badge-pedas {
+   281	        background: var(--gy-red);
+   282	        color: #2a0303;
+   283	    }
+   284	}
+   285	
+   286	// Spice level label already rendered on the orderline by orderline_patch.xml.
+   287	.pos .spice-level-badge {
+   288	    color: var(--gy-red) !important;
+   289	}
+   290	
+   291	/* ---------------------------------------------------------------------------
+   292	   5. ORDER PANEL (right side: "PESANAN", member card, cart lines, totals)
+   293	   ------------------------------------------------------------------------- */
+   294	.pos .product-screen .rightpane,
+   295	.pos .order-container,
+   296	.pos .rightpane {
+   297	    background: var(--gy-surface);
+   298	    border-left: 1px solid var(--gy-border);
+   299	}
+   300	
+   301	.pos .order .orderline,
+   302	.pos .orderline {
+   303	    background: var(--gy-surface-2);
+   304	    border: 1px solid var(--gy-border);
+   305	    border-radius: var(--gy-radius-md);
+   306	    margin-bottom: 8px;
+   307	    color: var(--gy-text);
+   308	
+   309	    &.selected {
+   310	        border-color: var(--gy-orange);
+   311	    }
+   312	
+   313	    .price,
+   314	    .product-price {
+   315	        color: var(--gy-gold);
+   316	        font-weight: 700;
+   317	    }
+   318	}
+   319	
+   320	.pos .order-summary,
+   321	.pos .payment-status-summary,
+   322	.pos .summary {
+   323	    .total,
+   324	    .value.total {
+   325	        color: var(--gy-gold);
+   326	        font-weight: 800;
+   327	        font-size: 1.35rem;
+   328	    }
+   329	
+   330	    .subentry .value,
+   331	    .line .value {
+   332	        color: var(--gy-text-muted);
+   333	    }
+   334	}
+   335	
+   336	/* ---------------------------------------------------------------------------
+   337	   6. ACTION BUTTONS (numpad, function-key row, "BAYAR" pay button)
+   338	   ------------------------------------------------------------------------- */
+   339	.pos .actionpad .button,
+   340	.pos .control-buttons .control-button {
+   341	    background: var(--gy-surface-2);
+   342	    border: 1px solid var(--gy-border);
+   343	    border-radius: var(--gy-radius-md);
+   344	    color: var(--gy-text);
+   345	}
+   346	
+   347	// Primary pay / checkout button — big orange bar in the reference.
+   348	.pos .actionpad .button.pay-order-button,
+   349	.pos .actionpad .pay-order-button,
+   350	.pos .payment-button,
+   351	.pos .button.next {
+   352	    background: linear-gradient(180deg, var(--gy-orange-2), var(--gy-orange));
+   353	    border: none;
+   354	    border-radius: var(--gy-radius-md);
+   355	    color: #fff;
+   356	    font-weight: 700;
+   357	    letter-spacing: 0.02em;
+   358	    box-shadow: 0 6px 16px rgba(255, 90, 31, 0.35);
+   359	
+   360	    &:hover {
+   361	        filter: brightness(1.05);
+   362	    }
+   363	}
+   364	
+   365	.pos .numpad button,
+   366	.pos .numpad .number-char {
+   367	    background: var(--gy-surface-2);
+   368	    border: 1px solid var(--gy-border);
+   369	    color: var(--gy-text);
+   370	    border-radius: var(--gy-radius-sm);
+   371	}
+   372	
+   373	/* ---------------------------------------------------------------------------
+   374	   7. STATUS BAR (bottom footer: version, online dot, printer, clock)
+   375	   ------------------------------------------------------------------------- */
+   376	.pos .pos-topheader ~ .status-buttons,
+   377	.pos footer,
+   378	.pos .order-management-status,
+   379	.pos .pos-status-bar {
+   380	    background: var(--gy-surface);
+   381	    border-top: 1px solid var(--gy-border);
+   382	    color: var(--gy-text-faint);
+   383	    font-size: 0.75rem;
+   384	}
+   385	
+   386	.pos .status-dot,
+   387	.pos .oe_status.oe_grey.oe_status_home,
+   388	.pos .js_connected {
+   389	    background: var(--gy-green);
+   390	    border-radius: 50%;
+   391	}
+   392	
+   393	/* ---------------------------------------------------------------------------
+   394	   8. LOGO HEADER — override CSS var resmi Odoo, bukan xpath patch.
+   395	   Terkonfirmasi dari source asli: point_of_sale/.../navbar/navbar.scss
+   396	   ------------------------------------------------------------------------- */
+   397	.pos {
+   398	    --navbar-logo: url("/geprekyukss_pos/static/src/img/logo.jpg");
+   399	}
+   400	
+   401	/* ---------------------------------------------------------------------------
+   402	   9. HEADER — override, sudah dicek langsung ke navbar.xml asli Odoo 19.
+   403	   Section 1 di atas pakai nama class hasil tebakan yang ternyata nggak ada
+   404	   di versi ini — section ini dimuat belakangan jadi menang di cascade.
+   405	   ------------------------------------------------------------------------- */
+   406	.pos .pos-topheader {
+   407	    background: var(--gy-surface) !important;
+   408	    border-bottom: 1px solid var(--gy-border) !important;
+   409	}
+   410	
+   411	.pos .pos-leftheader .btn,
+   412	.pos .pos-rightheader .btn {
+   413	    background: var(--gy-surface-2);
+   414	    border: 1px solid var(--gy-border);
+   415	    color: var(--gy-text) !important;
+   416	
+   417	    &.active {
+   418	        background: rgba(255, 90, 31, 0.12);
+   419	        border-color: var(--gy-orange);
+   420	        color: var(--gy-gold) !important;
+   421	    }
+   422	}
+   423	
+   424	.pos .pos-rightheader input {
+   425	    background: var(--gy-surface-2) !important;
+   426	    border: 1px solid var(--gy-border) !important;
+   427	    border-radius: var(--gy-radius-md);
+   428	    color: var(--gy-text) !important;
+   429	
+   430	    &::placeholder {
+   431	        color: var(--gy-text-faint);
+   432	    }
+   433	}
+   434	
+   435	.pos .status-buttons {
+   436	    color: var(--gy-text-muted);
+   437	}

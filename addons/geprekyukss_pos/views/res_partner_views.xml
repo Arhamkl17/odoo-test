@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_partner_form_view_pos_wa" model="ir.ui.view">
+        <field name="name">res.partner.form.pos.wa</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="pos_wa_number" string="No. WA Member"/>
+                <field name="pos_wa_verified" readonly="1"/>
+                <field name="pos_loyalty_points"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

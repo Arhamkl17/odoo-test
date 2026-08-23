@@ -1,0 +1,26 @@
+time="2026-08-22T15:15:32Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+     1	<?xml version="1.0" encoding="utf-8"?>
+     2	<odoo>
+     3	    <!--
+     4	        Inherit form view bawaan pos.category. ID di bawah diasumsikan
+     5	        "point_of_sale.product_pos_category_form_view" (nama view form
+     6	        kategori POS di Odoo 17-19). Kalau xpath ini gagal install (error
+     7	        "record not found" saat -u geprekyukss_pos), buka Settings >
+     8	        Technical > Views (aktifkan dev mode dulu), cari model
+     9	        "pos.category", lihat ID view form aslinya, lalu ganti nilai
+    10	        "ref" di bawah.
+    11	    -->
+    12	    <record id="pos_category_form_view_gy_icon" model="ir.ui.view">
+    13	        <field name="name">pos.category.form.gy.icon</field>
+    14	        <field name="model">pos.category</field>
+    15	        <field name="inherit_id" ref="point_of_sale.product_pos_category_form_view"/>
+    16	        <field name="arch" type="xml">
+    17	            <xpath expr="//sheet" position="inside">
+    18	                <group string="Tampilan Tab Kasir (Geprekyukss)">
+    19	                    <field name="pos_category_icon"/>
+    20	                    <field name="pos_category_icon_image" widget="image"/>
+    21	                </group>
+    22	            </xpath>
+    23	        </field>
+    24	    </record>
+    25	</odoo>

@@ -1,0 +1,89 @@
+time="2026-08-22T15:00:39Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+     1	# -*- coding: utf-8 -*-
+     2	# Part of Odoo. See LICENSE file for full copyright and licensing details.
+     3	
+     4	from typing import List, Tuple
+     5	import random
+     6	
+     7	from odoo import api, fields, models, _
+     8	from odoo.exceptions import ValidationError, UserError
+     9	
+    10	
+    11	class PosCategory(models.Model):
+    12	    _name = 'pos.category'
+    13	    _description = "Point of Sale Category"
+    14	    _inherit = ['pos.load.mixin']
+    15	    _order = "sequence, name"
+    16	
+    17	    @api.constrains('parent_id')
+    18	    def _check_category_recursion(self):
+    19	        if self._has_cycle():
+    20	            raise ValidationError(_('Error! You cannot create recursive categories.'))
+    21	
+    22	    def get_default_color(self):
+    23	        return random.randint(0, 10)
+    24	
+    25	    name = fields.Char(string='Category Name', required=True, translate=True)
+    26	    parent_id = fields.Many2one('pos.category', string='Parent Category', index=True)
+    27	    child_ids = fields.One2many('pos.category', 'parent_id', string='Children Categories')
+    28	    sequence = fields.Integer(help="Gives the sequence order when displaying a list of product categories.")
+    29	    image_512 = fields.Image("Image", max_width=512, max_height=512)
+    30	    image_128 = fields.Image("Image 128", related="image_512", max_width=128, max_height=128, store=True)
+    31	    color = fields.Integer('Color', required=False, default=get_default_color)
+    32	    hour_until = fields.Float(string='Availability Until', default=24.0, help="The product will be available until this hour for online order and self order.")
+    33	    hour_after = fields.Float(string='Availability After', default=0.0, help="The product will be available after this hour for online order and self order.")
+    34	
+    35	    # During loading of data, the image is not loaded so we expose a lighter
+    36	    # field to determine whether a pos.category has an image or not.
+    37	    has_image = fields.Boolean(compute='_compute_has_image')
+    38	
+    39	    @api.model
+    40	    def _load_pos_data_domain(self, data, config):
+    41	        domain = []
+    42	        if config.limit_categories:
+    43	            preparation_categories = [printer['product_categories_ids'] for printer in data['pos.printer']]
+    44	            flattened_preparation_categories = [item for sublist in preparation_categories for item in sublist]
+    45	            domain += [('id', 'in', flattened_preparation_categories + config.iface_available_categ_ids.ids)]
+    46	        return domain
+    47	
+    48	    @api.model
+    49	    def _load_pos_data_fields(self, config):
+    50	        return ['id', 'name', 'parent_id', 'child_ids', 'write_date', 'has_image', 'color', 'sequence', 'hour_until', 'hour_after']
+    51	
+    52	    def _get_hierarchy(self) -> List[str]:
+    53	        """ Returns a list representing the hierarchy of the categories. """
+    54	        self.ensure_one()
+    55	        return (self.parent_id._get_hierarchy() if self.parent_id else []) + [(self.name or '')]
+    56	
+    57	    @api.depends('parent_id')
+    58	    def _compute_display_name(self):
+    59	        for cat in self:
+    60	            cat.display_name = " / ".join(cat._get_hierarchy())
+    61	
+    62	    @api.ondelete(at_uninstall=False)
+    63	    def _unlink_except_session_open(self):
+    64	        if self.search_count([('id', 'in', self.ids)]):
+    65	            if self.env['pos.session'].sudo().search_count([('state', '!=', 'closed')]):
+    66	                raise UserError(_('You cannot delete a point of sale category while a session is still opened.'))
+    67	
+    68	    @api.depends('has_image')
+    69	    def _compute_has_image(self):
+    70	        for category in self:
+    71	            category.has_image = bool(category.image_128)
+    72	
+    73	    def _get_descendants(self):
+    74	        available_categories = self
+    75	        for child in self.child_ids:
+    76	            available_categories |= child
+    77	            available_categories |= child._get_descendants()
+    78	        return available_categories
+    79	
+    80	    @api.constrains('hour_until', 'hour_after')
+    81	    def _check_hour(self):
+    82	        for category in self:
+    83	            if category.hour_until and not (0.0 <= category.hour_until <= 24.0):
+    84	                raise ValidationError(_('The Availability Until must be set between 00:00 and 24:00'))
+    85	            if category.hour_after and not (0.0 <= category.hour_after <= 24.0):
+    86	                raise ValidationError(_('The Availability After must be set between 00:00 and 24:00'))
+    87	            if category.hour_until and category.hour_after and category.hour_until < category.hour_after:
+    88	                raise ValidationError(_('The Availability Until must be greater than Availability After.'))

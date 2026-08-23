@@ -1,0 +1,26 @@
+time="2026-08-22T15:05:02Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+     1	.category-list {
+     2	    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+     3	
+     4	    overflow-y: auto;
+     5	    flex-shrink: 0;
+     6	    margin-bottom: map-get($spacers, 2);
+     7	    max-height: 16.5rem;
+     8	
+     9	    @include media-breakpoint-down(md) {
+    10	        max-height: 11rem;
+    11	    }
+    12	}
+    13	
+    14	.category-button {
+    15	    --btn-border-color: #{$o-gray-200};
+    16	    border-width: 2px;
+    17	    height: 4rem;
+    18	
+    19	    .line-clamp-3 {
+    20	        display: -webkit-box;
+    21	        -webkit-line-clamp: 3;
+    22	        -webkit-box-orient: vertical;
+    23	        overflow: hidden;
+    24	    }
+    25	}

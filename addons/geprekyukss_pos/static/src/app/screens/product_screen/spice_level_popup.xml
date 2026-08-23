@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="geprekyukss_pos.SpiceLevelPopup">
+        <Dialog title="'Pilih Level Pedas — ' + props.productName" size="'sm'">
+            <div class="d-flex flex-column gap-2 p-2">
+                <button t-foreach="levels" t-as="lvl" t-key="lvl.value"
+                        class="btn btn-outline-danger text-start py-2"
+                        t-on-click="() => this.selectLevel(lvl.value)">
+                    <t t-esc="lvl.label"/>
+                </button>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-secondary" t-on-click="cancel">Batal</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

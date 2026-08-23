@@ -1,0 +1,28 @@
+time="2026-08-17T23:24:48Z" level=warning msg="/workspaces/Odoo-mv/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+2026-08-17 23:24:48,817 162 INFO ? odoo: Odoo version 19.0-20260810 
+2026-08-17 23:24:48,817 162 INFO ? odoo: Using configuration file at /etc/odoo/odoo.conf 
+2026-08-17 23:24:48,817 162 INFO ? odoo: addons paths: _NamespacePath(['/usr/lib/python3/dist-packages/odoo/addons', '/var/lib/odoo/addons/19.0', '/mnt/extra-addons', '/usr/lib/python3/dist-packages/addons']) 
+2026-08-17 23:24:48,817 162 INFO ? odoo: database: odoo@db:default 
+2026-08-17 23:24:49,108 162 INFO ? odoo.service.server: Initiating shutdown 
+2026-08-17 23:24:49,108 162 INFO ? odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-08-17 23:24:49,126 162 INFO Test1 odoo.modules.loading: loading 1 modules... 
+2026-08-17 23:24:49,130 162 INFO Test1 odoo.modules.loading: 1 modules loaded in 0.00s, 0 queries (+0 extra) 
+2026-08-17 23:24:49,150 162 INFO Test1 odoo.modules.loading: loading 73 modules... 
+2026-08-17 23:24:49,744 162 INFO Test1 odoo.modules.loading: 73 modules loaded in 0.59s, 0 queries (+0 extra) 
+2026-08-17 23:24:49,919 162 INFO Test1 odoo.modules.loading: Modules loaded. 
+2026-08-17 23:24:49,966 162 INFO Test1 odoo.registry: Registry loaded in 0.857s 
+Air Mineral | list_price: 5500.0 | image: True
+Air Mineral | list_price: 5500.0 | image: True
+Ayam Crispy Dada/Paha Atas + Indomie Goreng | list_price: 18000.0 | image: True
+Ayam Crispy Dada/Paha Atas + Indomie Goreng | list_price: 18000.0 | image: True
+Ayam Crispy Dada/Paha Atas + Nasi + Gratis Es Teh | list_price: 18000.0 | image: True
+Ayam Crispy Dada/Paha Atas + Nasi + Gratis Es Teh | list_price: 18000.0 | image: True
+Ayam Crispy Paha Bawah/Sayap + Indomie Goreng | list_price: 17000.0 | image: True
+Ayam Crispy Paha Bawah/Sayap + Indomie Goreng | list_price: 17000.0 | image: True
+Ayam Crispy Sayap/Paha Bawah + Nasi + Gratis Es Teh | list_price: 16000.0 | image: True
+Ayam Crispy Sayap/Paha Bawah + Nasi + Gratis Es Teh | list_price: 16000.0 | image: True
+Ayam Geprek Indomie + Pilih Sambal + Gratis Es Teh | list_price: 20000.0 | image: True
+Ayam Geprek Indomie + Pilih Sambal + Gratis Es Teh | list_price: 20000.0 | image: True
+Ayam Geprek Original + Nasi + Gratis Es Teh | list_price: 19000.0 | image: True
+Ayam Geprek Original + Nasi + Gratis Es Teh | list_price: 19000.0 | image: True
+Ayam Geprek Sambal Korek Surabaya + Nasi + Gratis Es Teh | list_price: 19000.0 | image: True

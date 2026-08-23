@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherit form view bawaan pos.category. ID di bawah diasumsikan
+        "point_of_sale.product_pos_category_form_view" (nama view form
+        kategori POS di Odoo 17-19). Kalau xpath ini gagal install (error
+        "record not found" saat -u geprekyukss_pos), buka Settings >
+        Technical > Views (aktifkan dev mode dulu), cari model
+        "pos.category", lihat ID view form aslinya, lalu ganti nilai
+        "ref" di bawah.
+    -->
+    <record id="pos_category_form_view_gy_icon" model="ir.ui.view">
+        <field name="name">pos.category.form.gy.icon</field>
+        <field name="model">pos.category</field>
+        <field name="inherit_id" ref="point_of_sale.product_pos_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Tampilan Tab Kasir (Geprekyukss)">
+                    <field name="pos_category_icon"/>
+                    <field name="pos_category_icon_image" widget="image"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

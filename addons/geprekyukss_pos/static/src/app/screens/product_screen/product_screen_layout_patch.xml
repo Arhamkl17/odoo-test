@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!--
+        Header "PESANAN" + tombol "Bersihkan" sebelum OrderSummary,
+        row "Tambah Catatan" setelah OrderSummary, dan sembunyikan Numpad
+        bawaan (qty diedit via stepper inline per item, bukan numpad).
+    -->
+    <t t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension">
+        <xpath expr="//OrderSummary" position="before">
+            <div class="gy-order-header d-flex justify-content-between align-items-center px-2 pt-2">
+                <div class="gy-order-title fw-bold">
+                    <i class="fa fa-shopping-bag me-2" role="img" aria-label="Pesanan"/>PESANAN
+                </div>
+                <button class="gy-clear-btn btn btn-sm"
+                        t-on-click="() => this.gyClearOrder()"
+                        t-att-disabled="!currentOrder or currentOrder.isEmpty()">
+                    <i class="fa fa-trash me-1" role="img" aria-label="Bersihkan"/>Bersihkan
+                </button>
+            </div>
+        </xpath>
+        <xpath expr="//OrderSummary" position="after">
+            <div class="gy-add-note d-flex justify-content-between align-items-center px-2 py-2"
+                 t-if="currentOrder and !currentOrder.isEmpty()"
+                 t-on-click="() => this.gyAddOrderNote()" role="button">
+                <span><i class="fa fa-sticky-note-o me-2" role="img" aria-label="Catatan"/>Tambah Catatan</span>
+                <i class="fa fa-chevron-right" role="img" aria-label=""/>
+            </div>
+        </xpath>
+        <xpath expr="//Numpad" position="attributes">
+            <attribute name="t-if">false</attribute>
+        </xpath>
+    </t>
+</templates>
