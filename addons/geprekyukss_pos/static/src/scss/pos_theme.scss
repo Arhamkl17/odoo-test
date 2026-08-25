@@ -149,8 +149,8 @@
     z-index: 3;
 
     img {
-        width: 28px;
-        height: 28px;
+        width: 44px;
+        height: 44px;
         object-fit: contain;
         flex: none;
     }
@@ -801,5 +801,64 @@ body.pos > .o-main-components-container {
         object-fit: contain;
         margin-right: 0.25rem;
         flex-shrink: 0;
+    }
+}
+
+// ==== RESPONSIVE: laptop / tablet / mobile ====
+// Rule letterbox 16:10 di atas tetap berlaku untuk laptop/desktop & tablet
+// landscape. Untuk mobile & tablet portrait, fit_width_scale.js menambahkan
+// class "pos-fluid" ke <body> dan rule di bawah ini me-reset layout agar
+// mengikuti layar asli (fluid, tanpa letterbox).
+html body.pos.pos-fluid {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    transform: none !important;
+}
+
+body.pos.pos-fluid > .pos {
+    height: 100% !important;
+    max-height: none !important;
+}
+
+body.pos.pos-fluid > .o-main-components-container {
+    width: 100vw;
+    height: 100dvh;
+}
+
+// Fallback kalau JS belum sempat jalan tapi viewport sudah kecil/portrait,
+// supaya tidak sempat terlihat letterbox 1280x800 di layar mobile.
+@media (max-width: 820px), (orientation: portrait) {
+    html body.pos {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        transform: none !important;
+    }
+
+    body.pos > .pos {
+        height: 100% !important;
+        max-height: none !important;
+    }
+
+    body.pos > .o-main-components-container {
+        width: 100vw;
+        height: 100dvh;
+    }
+
+    // Grid produk: 3 kolom di tablet portrait, 2 kolom di layar sempit.
+    // Kolom tetap 4 di laptop/desktop & landscape.
+    .product-list {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-list {
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }

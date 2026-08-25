@@ -14,7 +14,7 @@
     -->
     <t t-inherit="point_of_sale.Orderline" t-inherit-mode="extension">
         <xpath expr="//div[hasclass('product-name')]" position="after">
-            <div t-if="false and props.line.spice_level" class="spice-level-badge small fw-bold text-danger">
+            <div t-if="props.line.spice_level" class="spice-level-badge small fw-bold text-danger">
                 <i class="fa fa-fire me-1" role="img" aria-label="Level Pedas"/>
                 <t t-esc="spiceLevelLabel"/>
             </div>

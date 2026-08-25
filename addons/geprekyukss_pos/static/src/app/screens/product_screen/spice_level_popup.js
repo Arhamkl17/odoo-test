@@ -4,11 +4,11 @@ import { Component } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 
 export const SPICE_LEVELS = [
-    { value: "1", label: "Anti Pedas" },
-    { value: "2", label: "Sedang" },
-    { value: "3", label: "Pedas" },
-    { value: "4", label: "Extra Pedas" },
-    { value: "5", label: "Level Neraka" },
+    { value: "1", label: "1 🌶️" },
+    { value: "2", label: "2 🌶️🌶️" },
+    { value: "3", label: "3 🌶️🌶️🌶️" },
+    { value: "4", label: "4 🌶️🌶️🌶️🌶️" },
+    { value: "5", label: "5 🌶️🌶️🌶️🌶️🌶️" },
 ];
 
 // Popup dibangun di atas komponen Dialog generik dari @web/core (bukan
