@@ -6,6 +6,8 @@ berbeda — mis. bertimestamp jam — pakai folder/berkas yang benar-benar ada.)
 Cara pakai: buka repo di codespace baru → tempelkan seluruh isi bagian **PROMPT** di bawah ke agen AI
 (atau suruh agen membaca berkas ini: *"ikuti PROMPT_RESTORE_CODESPACE_BARU.md"*).
 
+> Versi pendek yang tinggal disalin: `PROMPT_CHAT_CODESPACE_BARU.md`.
+
 Backup yang harus ikut dipindahkan (dibuat 15 Sep 2026):
 `backups/odoo_Test1_2026-09-15/` — 104 MB, atau satu berkas
 `backups/odoo_Test1_2026-09-15/Test1_full_2026-09-15.zip` (28 MB) bila ingin lebih ringkas.
@@ -163,6 +165,7 @@ Keberhasilan penuh = **65/65 metrik sama** dan **6/6 test parity** `ALL PASS`
 
 | Berkas | Isi |
 |---|---|
+| `PROMPT_CHAT_CODESPACE_BARU.md` | kalimat siap-tempel untuk agen AI di codespace baru (versi pendek dokumen ini) |
 | `INSPEKSI_SISTEM_2026-09-15.md` | hasil inspeksi read-only menyeluruh + baseline angka + cara mengulang inspeksi |
 | `PLANNING_PERBAIKAN_HASIL_INSPEKSI_2026-09-15.md` | rencana & status fase perbaikan (F1–F7) |
 | `RINGKASAN_PERBAIKAN_F1_F2_2026-09-15.md`, `RINGKASAN_PERBAIKAN_F3_2026-09-15.md`, `RINGKASAN_PERBAIKAN_F4_2026-09-15.md` | ringkasan perbaikan yang sudah selesai (HPP sub-resep, persediaan, penomoran jurnal, vendor, register aset tetap) |
