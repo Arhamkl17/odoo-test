@@ -12,6 +12,29 @@ Backup yang harus ikut dipindahkan (dibuat 15 Sep 2026):
 
 ---
 
+## Jalur cepat (1 perintah, tanpa pindah berkas manual)
+
+Repo `Arhamkl17/odoo-test` bersifat **publik**, jadi di akun GitHub mana pun cukup:
+
+1. **Buat Codespace** dari repo `Arhamkl17/odoo-test` (branch `main`). Login pakai akun
+   masing-masing — tidak perlu ditambahkan sebagai collaborator.
+2. Di terminal codespace (sudah berada di dalam container `odoo`), jalankan:
+
+```bash
+bash scripts/bootstrap_codespace.sh
+```
+
+Skrip itu: menyalakan container (bila `docker` tersedia), memastikan addons terbaca Odoo,
+mengunduh zip backup 28 MB dari **GitHub Release** repo ini (`BACKUP_URL`, lihat bagian
+*Sumber backup* di bawah), lalu menyerahkan seluruh pekerjaan ke
+`scripts/restore_full_system.sh` — restore DB + filestore, bandingkan 65 metrik baseline,
+dan jalankan 6 test parity. Keluarannya sama dengan Langkah 1–4 di bawah.
+
+Yang **tidak** perlu dilakukan: tidak perlu `git push`, tidak perlu menaruh berkas backup
+ke dalam repo (`.gitignore` tetap mengabaikan `backups/`, sehingga repo tetap ringan).
+
+---
+
 ## PROMPT
 
 ### Peran & tujuan
@@ -49,14 +72,23 @@ Terminal devcontainer sudah berada **di dalam container `odoo`** (di situlah `ps
 
 **2. Siapkan berkas backup**
 
+Urutan yang dipakai `bootstrap_codespace.sh` (bisa juga dilakukan manual):
+*argumen skrip* → *berkas lokal di `backups/`* → *unduh dari GitHub Release*.
+
+- **Unduh dari GitHub Release** (default, tanpa unggah manual):
+  ```bash
+  mkdir -p backups/_download && cd backups/_download
+  curl -fL -O https://github.com/Arhamkl17/odoo-test/releases/download/backup-2026-09-15/Test1_full_2026-09-15.zip
+  ```
+  Zip 28 MB ini berisi `dump.sql` + `filestore/` + master CSV + `baseline_metrics.txt`.
 - Idealnya folder backup lengkap `backups/odoo_Test1_2026-09-15/` (berisi `Test1.dump`,
   `Test1_full_*.zip`, `filestore/`, `master/*.csv`, `baseline_metrics.txt`, `SHA256SUMS`).
 - Jika pemilik hanya mengunggah **satu berkas** `Test1_full_2026-09-15.zip` (28 MB, berisi
   `dump.sql` + `filestore/` + master CSV + baseline + README), itu **sudah cukup** — taruh di folder
   mana pun di dalam repo.
-- Jika tidak ada berkas backup sama sekali: **berhenti dan minta pemilik mengunggah** zip tersebut.
-  Repo git saja **tidak** bisa memulihkan transaksi (yang ada di git hanya kode, skrip, addons, dan
-  ekspor master sebagian di `import_data/`).
+- Jika tidak ada berkas backup sama sekali: **berhenti dan minta pemilik mengunggah** zip tersebut
+  (atau pakai URL Release di atas). Repo git saja **tidak** bisa memulihkan transaksi (yang ada di git
+  hanya kode, skrip, addons, dan ekspor master sebagian di `import_data/`).
 - Bila folder lengkap tersedia, pastikan belum rusak:
   ```bash
   cd backups/odoo_Test1_2026-09-15 && sha256sum -c SHA256SUMS | grep -v ': OK$' ; cd -

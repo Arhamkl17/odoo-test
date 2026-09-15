@@ -8,8 +8,6 @@
 
   "service": "odoo",
 
-  "workspaceFolder": "/workspaces/Odoo-mv",
-
   "forwardPorts": [8069, 5432],
 
   "portsAttributes": {
