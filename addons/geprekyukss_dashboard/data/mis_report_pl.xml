@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Template MIS P&L (F5a — roadmap §G.2, keputusan Q1 kanonik bertahap + Q8).
+
+  Prinsip:
+  - Pinjam engine MIS Builder; template ini sengaja dibuat MIRIP klasifikasi
+    _finance_detail (dashboard_data.py) supaya angka bisa diverifikasi identik:
+      * income  = akun (income, income_other): -(bal) = kredit - debit
+      * expense = akun EXPENSE_TYPES: bal = debit - kredit
+        (di build ini penyusutan bertipe expense biasa;
+        expense_depreciation & expense_gnrl_admin kosong — tetap di-include
+        agar klasifikasi identik _finance_detail)
+  - Q8 (DIREVISI Fase 11, 12 Sep): JE "(demo)" Fase 9 ternyata ADJUSTMENT REAL
+    (marker "(demo)" sudah dihapus dari move.ref oleh fase11_demo_to_real.py).
+    KPI TIDAK lagi mem-filter ref — demo-exclude domain DIHAPUS, sehingga
+    P&L MIS == ground truth AML raw == dashboard (_finance_detail).
+  - Pola ekspresi mengikuti mis_builder_cash_flow (terbukti jalan di build ini):
+    selector akun KOSONG (semua akun, AEP pakai active_test=False — akun arsip
+    ikut, konsisten temuan F2) + filter di domain move line (account_type adalah
+    field related stored di account.move.line Odoo 19).
+  - HPP = expense_direct_cost; Beban Penyusutan = nama akun ~ 'penyusutan'
+    (klasifikasi by-name, konsisten dashboard).
+  - Style eksplisit semua (tidak pernah string kosong) — hindari error
+    "Style '' not found" (ANALISIS_MODUL_OCA F2).
+-->
+<odoo noupdate="True">
+
+    <!-- ================= STYLES (semua eksplisit) ================= -->
+    <record id="mis_style_pl_header" model="mis.report.style">
+        <field name="name">GK P&amp;L header</field>
+        <field name="color_inherit" eval="False"/>
+        <field name="color">#FFFFFF</field>
+        <field name="background_color_inherit" eval="False"/>
+        <field name="background_color">#0F7C6C</field>
+        <field name="font_weight_inherit" eval="False"/>
+        <field name="font_weight">bold</field>
+    </record>
+    <record id="mis_style_pl_section" model="mis.report.style">
+        <field name="name">GK P&amp;L section</field>
+        <field name="font_weight_inherit" eval="False"/>
+        <field name="font_weight">bold</field>
+        <field name="indent_level_inherit" eval="False"/>
+        <field name="indent_level">0</field>
+    </record>
+    <record id="mis_style_pl_line" model="mis.report.style">
+        <field name="name">GK P&amp;L line</field>
+        <field name="indent_level_inherit" eval="False"/>
+        <field name="indent_level">1</field>
+    </record>
+    <record id="mis_style_pl_total" model="mis.report.style">
+        <field name="name">GK P&amp;L total</field>
+        <field name="color_inherit" eval="False"/>
+        <field name="color">#FFFFFF</field>
+        <field name="background_color_inherit" eval="False"/>
+        <field name="background_color">#1E8E5A</field>
+        <field name="font_weight_inherit" eval="False"/>
+        <field name="font_weight">bold</field>
+    </record>
+
+    <!-- ================= TEMPLATE ================= -->
+    <record id="mis_report_pl" model="mis.report">
+        <field name="name">Geprekyukss Laba Rugi</field>
+        <field name="style_id" ref="mis_style_pl_line"/>
+    </record>
+
+    <!--
+      Fase 11: tidak ada filter move line ref lagi (JE "(demo)" = data real).
+      Catatan teknis yang tetap berlaku: ml_domain harus flat list of leaves
+      tanpa parens tambahan (regex AEP non-greedy; lihat mis_report_bs.xml).
+    -->
+    <record id="mis_kpi_pl_income" model="mis.report.kpi">
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="name">income</field>
+        <field name="description">PENDAPATAN</field>
+        <field name="style_id" ref="mis_style_pl_section"/>
+        <field name="sequence">10</field>
+        <field name="expression">-balp[][('account_type', 'in', ('income', 'income_other'))]</field>
+    </record>
+    <record id="mis_kpi_pl_expense" model="mis.report.kpi">
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="name">expense</field>
+        <field name="description">BEBAN</field>
+        <field name="style_id" ref="mis_style_pl_section"/>
+        <field name="sequence">20</field>
+        <field name="expression">balp[][('account_type', 'in', ('expense', 'expense_direct_cost', 'expense_depreciation', 'expense_gnrl_admin'))]</field>
+    </record>
+    <record id="mis_kpi_pl_hpp" model="mis.report.kpi">
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="name">hpp</field>
+        <field name="description">HPP (Harga Pokok Penjualan)</field>
+        <field name="style_id" ref="mis_style_pl_line"/>
+        <field name="sequence">21</field>
+        <field name="expression">balp[][('account_type', '=', 'expense_direct_cost')]</field>
+    </record>
+    <record id="mis_kpi_pl_dep" model="mis.report.kpi">
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="name">dep</field>
+        <field name="description">Beban Penyusutan</field>
+        <field name="style_id" ref="mis_style_pl_line"/>
+        <field name="sequence">22</field>
+        <field name="expression">balp[][('account_type', 'in', ('expense', 'expense_direct_cost', 'expense_depreciation', 'expense_gnrl_admin')), ('account_id.name', 'ilike', 'penyusutan')]</field>
+    </record>
+    <record id="mis_kpi_pl_net" model="mis.report.kpi">
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="name">net</field>
+        <field name="description">LABA BERSIH</field>
+        <field name="style_id" ref="mis_style_pl_total"/>
+        <field name="sequence">30</field>
+        <field name="expression">income - expense</field>
+    </record>
+    <record id="mis_kpi_pl_margin" model="mis.report.kpi">
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="name">margin</field>
+        <field name="description">Margin Bersih (%)</field>
+        <field name="style_id" ref="mis_style_pl_line"/>
+        <field name="sequence">40</field>
+        <field name="expression">income and net / income * 100 or 0</field>
+    </record>
+
+    <!-- ================= INSTANCE (2 kolom: bulan + YTD — keputusan Q4) ================= -->
+    <record id="mis_instance_pl" model="mis.report.instance">
+        <field name="name">Laba Rugi (Dashboard)</field>
+        <field name="report_id" ref="mis_report_pl"/>
+        <field name="comparison_mode" eval="True"/>
+        <field name="landscape_pdf" eval="True"/>
+        <field name="target_move">posted</field>
+    </record>
+
+    <!-- Kolom 1: bulan berjalan — mode fix (di-sync wrapper dari filter shell) -->
+    <record id="mis_period_pl_month" model="mis.report.instance.period">
+        <field name="name">Bulan Ini</field>
+        <field name="report_instance_id" ref="mis_instance_pl"/>
+        <field name="source">actuals</field>
+        <field name="mode">fix</field>
+        <field name="manual_date_from">2026-08-01</field>
+        <field name="manual_date_to">2026-08-31</field>
+        <field name="sequence">10</field>
+    </record>
+    <!-- Kolom 2: YTD (1 Jan s.d. akhir bulan filter) — di-sync wrapper -->
+    <record id="mis_period_pl_ytd" model="mis.report.instance.period">
+        <field name="name">YTD</field>
+        <field name="report_instance_id" ref="mis_instance_pl"/>
+        <field name="source">actuals</field>
+        <field name="mode">fix</field>
+        <field name="manual_date_from">2026-01-01</field>
+        <field name="manual_date_to">2026-08-31</field>
+        <field name="sequence">20</field>
+    </record>
+
+</odoo>

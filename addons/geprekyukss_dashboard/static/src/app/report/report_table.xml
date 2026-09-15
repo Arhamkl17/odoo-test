@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="geprekyukss_dashboard.ReportTable">
+        <div class="gk-rtable">
+            <div class="gk-rtable-tools" t-if="props.rows.length">
+                <div class="gk-rtable-search">
+                    <i class="fa fa-search"/>
+                    <input type="text" placeholder="Cari…" t-on-input="onSearch"
+                           t-att-value="state.search"/>
+                </div>
+                <span class="gk-rtable-count" t-esc="rangeLabel"/>
+            </div>
+
+            <div class="gk-rtable-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <t t-foreach="props.columns" t-as="col" t-key="col.key">
+                                <th t-att-class="'gk-col-' + (col.align || 'left') + (col.sortable ? ' gk-sortable' : '')"
+                                    t-on-click="() => this.onSort(col.key)">
+                                    <!-- F7: chip sisi kolom D/K ala FinanceFlow -->
+                                    <t t-if="col.key === 'debit'"><span class="gk-side-chip gk-side-d">D</span></t>
+                                    <t t-elif="col.key === 'credit'"><span class="gk-side-chip gk-side-k">K</span></t>
+                                    <span t-esc="col.label"/>
+                                    <i t-if="col.sortable" t-att-class="'fa ' + sortIcon(col.key) + ' gk-sort-icon'"/>
+                                </th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="pageRows" t-as="row" t-key="row_index">
+                            <tr t-att-class="'gk-rtable-row-' + (row.style || 'data')">
+                                <t t-foreach="props.columns" t-as="col" t-key="col.key">
+                                    <td t-att-class="'gk-col-' + (col.align || 'left') + amountCls(col, row[col.key])">
+                                        <t t-if="col.format === 'currency'"
+                                           t-esc="amountText(col, row[col.key])"/>
+                                        <t t-else="" t-esc="row[col.key]"/>
+                                    </td>
+                                </t>
+                            </tr>
+                        </t>
+                        <tr t-if="!pageRows.length">
+                            <td class="gk-rtable-nodata" t-att-colspan="props.columns.length">
+                                <t t-if="props.rows.length">Tidak ada baris yang cocok dengan pencarian.</t>
+                                <t t-else="">Tidak ada data pada periode ini.</t>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot t-if="hasTotals">
+                        <t t-foreach="totalRows" t-as="tot" t-key="tot_index">
+                            <!-- Shape 1: debit/credit (GL, VAT) -->
+                            <tr t-if="!tot.values" class="gk-rtable-totrow">
+                                <td t-att-colspan="(props.columns.length - 2)" class="gk-col-right">
+                                    <b t-esc="tot.label"/>
+                                </td>
+                                <td class="gk-col-right"><b t-esc="formatRp(tot.debit)"/></td>
+                                <td class="gk-col-right"><b t-esc="formatRp(tot.credit)"/></td>
+                            </tr>
+                            <!-- Shape 2: values per kolom bucket (Aged Partner) -->
+                            <tr t-else="" class="gk-rtable-totrow">
+                                <td class="gk-col-right"><b t-esc="tot.label"/></td>
+                                <t t-foreach="props.columns" t-as="col" t-key="col_index">
+                                    <td t-if="col.key !== 'partner'" class="gk-col-right">
+                                        <b t-if="tot.values[col.key] !== undefined"
+                                           t-esc="formatRp(tot.values[col.key])"/>
+                                    </td>
+                                </t>
+                            </tr>
+                        </t>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="gk-rtable-pager" t-if="pageCount > 1">
+                <button class="gk-rtable-page-btn" t-on-click="prevPage"
+                        t-att-disabled="state.page === 0">‹</button>
+                <span>Halaman <t t-esc="state.page + 1"/> / <t t-esc="pageCount"/></span>
+                <button class="gk-rtable-page-btn" t-on-click="nextPage"
+                        t-att-disabled="state.page >= pageCount - 1">›</button>
+            </div>
+        </div>
+    </t>
+
+</templates>

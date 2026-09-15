@@ -1,0 +1,1234 @@
+// =====================================================================
+// Dashboard Keuangan Geprekyukss — Redesign "Power BI" (Stage 1)
+// Spec: UI laporan/SPEC_DASHBOARD_REDESIGN_POWERBI.md
+// Bahasa visual: kanvas abu sangat muda, kartu putih radius 8px dengan
+// elevasi tipis, warna hanya untuk makna (naik/turun & kategori),
+// label sentence case, font Inter (fallback Segoe UI/system).
+// Inter dimuat via <link> dari dashboard.js (CSS @import tidak reliable
+// di dalam bundle gabungan Odoo).
+// =====================================================================
+
+// ---------------------------------------------------------------
+// DESIGN TOKENS (spec §2)
+// ---------------------------------------------------------------
+$bg-canvas: #F5F6F8;        // latar halaman — bukan putih polos
+$surface-card: #FFFFFF;     // latar kartu/panel
+$border-hairline: #E4E7EC;  // border 1px kartu/tabel/divider
+$text-primary: #1A1D29;     // judul, angka besar
+$text-secondary: #6B7280;   // label kecil, keterangan
+$brand: #0F7C6C;            // teal Contra Group (identitas)
+$brand-dark: #0B5F53;       // turunan brand (gradient logo/chart)
+$brand-tint: rgba(15, 124, 108, 0.08);   // brand 8% (active state)
+$brand-tint-soft: rgba(15, 124, 108, 0.14);
+$positive: #1E8E5A;         // naik / sehat
+$negative: #D64545;         // turun / rugi / minus
+$accent-amber: #E8A33D;     // kategori sekunder (bukan status)
+$accent-blue: #3B6FE0;      // kategori sekunder ke-2
+
+// Turunan netral (dari token, tidak ada warna liar)
+$hover-wash: #F2F4F6;       // hover item navigasi/list
+$track: #EDF0F3;            // track progress bar
+$divider-soft: #EEF1F4;     // pemisah baris tabel/list
+$panel-wash: #F8FAFB;       // blok panel di dalam kartu
+$scrollbar: #D2D7DE;
+
+// Satu-satunya shadow kartu (spec §2 Layout)
+$card-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+
+$radius-card: 8px;          // semua kartu — "alat kerja", bukan app konsumen
+$radius-control: 6px;       // pill/button filter
+$font-stack: 'Inter', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+// ---------------------------------------------------------------
+// LAYOUT & SCROLL
+// Odoo membungkus action client dalam .o_action_manager > .o_action
+// yang overflow:hidden + height:100% — jadi .gk-dash harus membatasi
+// tingginya sendiri dan .gk-main yang di-scroll (body tidak pernah scroll).
+// ---------------------------------------------------------------
+.gk-dash {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 0;      // kunci flex agar child boleh mengecil & overflow bekerja
+    overflow: hidden;   // scroll ditangani .gk-main / .gk-sidebar, bukan di sini
+    background: $bg-canvas;
+    color: $text-primary;
+    font-family: $font-stack;
+    font-size: 14px;
+}
+
+// ---------------------------------------------------------------
+// SIDEBAR
+// (Reshape — section label, "Live", last-update — Stage 6; token saja dulu)
+// ---------------------------------------------------------------
+.gk-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: $surface-card;
+    border-right: 1px solid $border-hairline;
+    padding: 28px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;   // aman bila nav makin banyak item
+    box-sizing: border-box;
+
+    // scrollbar tipis saja (isi sidebar normalnya muat)
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-thumb { background: $scrollbar; border-radius: 999px; }
+}
+
+.gk-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px;
+}
+
+// Branding Geprekyukss: logo asset (riquest 12 Sep) — dipakai di kedua
+// sidebar via <img class="gk-brand-logo-img">. Kelas monogram lama
+// (.gk-brand-logo) tidak lagi dirender; dipertahankan hanya sebagai legacy.
+.gk-brand-logo-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 2px 6px rgba(15, 124, 108, 0.25);
+    flex-shrink: 0;
+}
+
+.gk-brand-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, $brand, $brand-dark);
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(15, 124, 108, 0.25);
+}
+
+.gk-brand-name {
+    font-weight: 700;
+    color: $text-primary;
+    font-size: 15px;
+}
+
+.gk-brand-sub {
+    font-size: 11.5px;
+    color: $text-secondary;
+    letter-spacing: 0.02em;
+}
+
+.gk-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+// Section label pengelompok navigasi (spec §3 Sidebar — fungsional, bukan dekorasi)
+.gk-nav-section {
+    font-size: 11px;
+    font-weight: 500;
+    color: $text-secondary;
+    margin: 0 0 2px 14px;
+}
+
+// F-UI.2 (gaya FinanceFlow): section header grup di dalam LAPORAN OCA —
+// uppercase kecil abu-abu, letter-spacing lebar, pemisah tipis di atas
+// (grup pertama tidak perlu pemisah — dihandle :not(:first-child) di bawah).
+.gk-nav-section.gk-nav-group {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $text-secondary;
+    opacity: 0.85;
+    margin: 10px 0 2px 14px;
+}
+
+// F-UI.2: nav item laporan — lebih ringkas dari tab utama (sidebar memuat
+// 4 tab + 9 laporan; ukuran font sedikit turun agar ritme grup tetap jelas).
+.gk-nav-item-sm {
+    padding: 7px 14px;
+    font-size: 13px;
+    gap: 10px;
+
+    i { font-size: 13px; }
+}
+
+.gk-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: $radius-card;
+    color: $text-secondary;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    i { width: 18px; text-align: center; font-size: 15px; }
+
+    &:hover { background: $hover-wash; color: $text-primary; }
+
+    // Pola khas navigasi BI: brand 8% + left border 3px brand
+    &.active {
+        background: $brand-tint;
+        box-shadow: inset 3px 0 0 $brand;
+        color: $brand;
+        font-weight: 600;
+    }
+}
+
+.gk-sidebar-bottom {
+    margin-top: auto;
+    font-size: 13px;
+    padding: 12px 8px 0;
+    border-top: 1px solid $border-hairline;
+}
+
+// Header baris Koneksi outlet: label kiri, "● Live" kanan (spec §3 Sidebar)
+.gk-outlets-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.gk-outlets-label {
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: $text-secondary;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.gk-outlet {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 0;
+    color: $text-primary;
+}
+
+// Indikator "● Live" — right-aligned di header Koneksi outlet (spec §3 Sidebar)
+.gk-live-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: $positive;
+    font-weight: 600;
+}
+
+.gk-live-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: $positive;
+}
+
+// Timestamp "Diperbarui HH:MM" — penutup blok sidebar, clock icon (spec §3)
+.gk-nav-section.gk-updated {
+    margin: 12px 0 0;
+    padding-top: 0;
+    border-top: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    i { font-size: 11px; color: $text-secondary; }
+}
+
+.gk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $positive;
+    box-shadow: 0 0 0 3px rgba(30, 142, 90, 0.15);
+    flex-shrink: 0;
+}
+
+// ---------------------------------------------------------------
+// MAIN & HEADER
+// ---------------------------------------------------------------
+.gk-main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;          // boleh menyusut dalam flex, prerequisite overflow
+    height: 100%;
+    overflow-y: auto;       // <-- INI scroll konten dashboard
+    -webkit-overflow-scrolling: touch;
+    padding: 28px 32px 40px;
+
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: $scrollbar; border-radius: 999px; }
+    &::-webkit-scrollbar-thumb:hover { background: #B9BFC8; }
+}
+
+.gk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.gk-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    color: $text-primary;
+}
+
+// SPEC_OVERHAUL F1: "Premium" pill kecil di samping judul (mirip referensi 6 PNG)
+.gk-premium-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    padding: 3px 9px 3px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.30);
+}
+
+.gk-premium-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.gk-header-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    > .gk-subtitle { flex-basis: 100%; margin-top: 4px; }
+}
+
+// SPEC_OVERHAUL F0: Avatar bulat top-right (mirip referensi)
+.gk-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $brand, $brand-dark);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+    cursor: default;
+}
+
+.gk-subtitle {
+    color: $text-secondary;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.gk-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+// SPEC_OVERHAUL F0: Date Range picker (ganti gk-month-picker) — mirip report.scss F-UI.5
+// Input date native browser, styled token existing. Preset chip di bawah.
+.gk-range-picker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    border-radius: $radius-control;
+    padding: 6px 10px;
+    box-shadow: $card-shadow;
+}
+
+.gk-range-input {
+    border: 1px solid $border-hairline;
+    border-radius: $radius-control;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: $text-primary;
+    background: #fff;
+
+    &:focus {
+        outline: none;
+        border-color: $brand;
+        box-shadow: 0 0 0 3px $brand-tint;
+    }
+}
+
+.gk-range-sep {
+    color: $text-secondary;
+    font-weight: 600;
+    padding: 0 2px;
+}
+
+.gk-range-presets {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.gk-range-chip {
+    border: 1px solid $border-hairline;
+    background: $surface-card;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-primary;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+
+    &:hover { background: $hover-wash; }
+
+    &.active {
+        background: $brand-tint;
+        border-color: $brand;
+        color: $brand;
+        font-weight: 600;
+    }
+}
+
+.gk-range-error {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border: 1px solid rgba(214, 69, 69, 0.25);
+    background: rgba(214, 69, 69, 0.06);
+    color: $negative;
+    border-radius: $radius-card;
+    font-size: 13px;
+
+    i { margin-right: 6px; }
+}
+
+// Legacy month picker — dipertahankan untuk report_shell, tidak lagi dipakai dashboard header
+.gk-month-picker {
+    display: flex;
+    align-items: center;
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    border-radius: $radius-control;
+    padding: 6px 12px;
+    gap: 4px;
+    box-shadow: $card-shadow;
+}
+
+.gk-month-label {
+    padding: 0 10px;
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 13.5px;
+    white-space: nowrap;
+    min-width: 128px;
+    text-align: center;
+
+    i { color: $text-secondary; margin-right: 6px; }
+}
+
+.gk-month-btn {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: $text-secondary;
+    border-radius: $radius-control;
+
+    &:hover { background: $hover-wash; color: $text-primary; }
+}
+
+// ---------------------------------------------------------------
+// OUTLET FILTER DROPDOWN (Global Filter #1)
+// Tampil di header; state.outletMenuOpen toggle via OWL.
+// ---------------------------------------------------------------
+.gk-outlet-filter {
+    position: relative;
+}
+
+.gk-outlet-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    border-radius: $radius-control;
+    padding: 6px 12px;
+    font-weight: 600;
+    color: $text-primary;
+    cursor: pointer;
+    box-shadow: $card-shadow;
+    font-size: 13.5px;
+    font-family: inherit;
+    max-width: 220px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    > i:first-child { color: $text-secondary; }
+
+    &:hover { border-color: #D3D9E0; }
+
+    &.open {
+        border-color: $brand;
+        box-shadow: 0 0 0 3px $brand-tint;
+    }
+}
+
+.gk-outlet-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+.gk-outlet-caret {
+    font-size: 11px;
+    color: $text-secondary;
+    transition: transform 0.15s ease;
+
+    .gk-outlet-btn.open & { transform: rotate(180deg); }
+}
+
+.gk-outlet-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 220px;
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    border-radius: $radius-card;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12);
+    padding: 6px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.gk-outlet-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    border-radius: $radius-control;
+    font-size: 13.5px;
+    color: $text-primary;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+
+    &:hover { background: $hover-wash; }
+
+    &.active {
+        background: $brand-tint;
+        color: $brand;
+        font-weight: 600;
+    }
+}
+
+.gk-outlet-bullet {
+    font-size: 8px;
+    color: $text-secondary;
+}
+
+// CTA solid (PDF) + ghost (Excel) — header baru pakai 2 tombol
+.gk-btn-export {
+    background: $positive;
+    color: #fff;
+    border: none;
+    border-radius: $radius-card;
+    padding: 9px 16px;
+    font-weight: 600;
+    font-size: 13.5px;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(30, 142, 90, 0.35);
+    transition: background 0.15s ease;
+
+    &:hover { background: #187A4D; }
+
+    i { margin-right: 7px; }
+}
+
+.gk-btn-ghost {
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    color: $text-primary;
+    box-shadow: $card-shadow;
+
+    &:hover { background: $hover-wash; }
+}
+
+// SPEC_OVERHAUL F0: toggle button "Rentang Kustom" di mode month
+.gk-range-toggle {
+    padding: 7px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+
+    i { margin-right: 6px; }
+}
+
+// SPEC_OVERHAUL F1: tombol "View audit trail" di akhir Beranda
+.gk-audit-trail-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0 4px;
+}
+
+.gk-audit-trail-btn {
+    padding: 9px 18px;
+    font-size: 13.5px;
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    color: $brand;
+    box-shadow: $card-shadow;
+
+    &:hover {
+        background: $brand-tint;
+        border-color: $brand;
+        color: $brand;
+    }
+
+    i { margin-right: 8px; }
+}
+
+// ---------------------------------------------------------------
+// CARDS & GRID
+// Elevasi tipis + radius 8px + jarak antar kartu 16px (spec §2 Layout)
+// ---------------------------------------------------------------
+.gk-card {
+    background: $surface-card;
+    border: 1px solid $border-hairline;
+    border-radius: $radius-card;
+    padding: 22px 24px;
+    box-shadow: $card-shadow;
+    margin-bottom: 16px;
+}
+
+.gk-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    .gk-card { margin-bottom: 0; }
+
+    @media (max-width: 1100px) { grid-template-columns: 1fr; }
+}
+
+.gk-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: $text-primary;
+    }
+}
+
+// Sub-header list: sentence case (bukan uppercase — spec §2 Tipografi)
+.gk-h4 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $text-secondary;
+    margin: 0 0 10px;
+}
+
+.gk-muted { color: $text-secondary; }
+.gk-muted.small { font-size: 11.5px; }
+.gk-strong { font-weight: 600; color: $text-primary; }
+.gk-strong.big { font-size: 20px; }
+
+// ---------------------------------------------------------------
+// OVERHAUL 15 Sep (K1): HERO BAND + GAUGE dihapus — Laba Bersih kini
+// tampil sebagai KPI ke-5 di row atas (match referensi ChatGPT PSAK).
+// ---------------------------------------------------------------
+// KPI CARDS (Ringkasan Eksekutif)
+// ---------------------------------------------------------------
+.gk-kpi-row {
+    display: grid;
+    // OVERHAUL 15 Sep: Beranda pakai modifier --5 (5 KPI polos); tab lain
+    // 3-4 kartu inline style / modifier .two — jumlah kartu harus selalu
+    // sama dgn kolom grid, kalau ada gap kosong di kanan.
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+
+    &.two { grid-template-columns: repeat(2, 1fr); }
+
+    .gk-card { margin-bottom: 0; }
+
+    @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 700px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+// ---------------------------------------------------------------
+// OVERHAUL 15 Sep (K1): gauge "Status Keuangan" (F-UI.3) dihapus
+// bersama hero band.
+// ---------------------------------------------------------------
+
+.gk-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &.teal {
+        background: linear-gradient(135deg, $brand, $brand-dark);
+        border: none;
+        color: #fff;
+
+        .gk-kpi-value, .gk-kpi-label.light { color: #fff; }
+        .gk-muted.light { color: rgba(255, 255, 255, 0.75); }
+    }
+}
+
+// Label KPI: sentence case, 12px/500, secondary (spec §2 Tipografi)
+.gk-kpi-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-secondary;
+}
+
+.gk-kpi-value {
+    font-size: 30px;
+    font-weight: 600;
+    color: $text-primary;
+    letter-spacing: -0.01em;
+    font-feature-settings: "tnum";  // angka tabular — angka sejajar antar kartu
+
+    &.neg { color: $negative; }
+}
+
+.gk-kpi-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: $text-secondary;
+}
+
+// Baris bawah KPI: indikator kiri, sparkline di pojok kanan bawah (spec §3)
+.gk-kpi-foot-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+
+    .gk-kpi-foot { min-width: 0; }
+}
+
+.gk-kpi-spark {
+    width: 58px;
+    height: 26px;
+    flex-shrink: 0;
+    opacity: 0.9;
+
+    canvas { display: block; width: 100%; height: 100%; }
+}
+
+// Indikator arah: panah + persen, warna status (tanpa badge pill —
+// warna status hanya membawa makna arah, spec §2 prinsip)
+.gk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+
+    &.up { color: $positive; }
+    &.down { color: $negative; }
+}
+
+// ---------------------------------------------------------------
+// CHARTS
+// ---------------------------------------------------------------
+.gk-chart-card { padding-bottom: 16px; }
+
+.gk-legend-dot {
+    font-size: 12.5px;
+    color: $text-secondary;
+
+    b { color: $text-primary; }
+}
+
+.gk-chart-box {
+    position: relative;
+    height: 300px;
+
+    &.square { height: 230px; width: 230px; }
+}
+
+.gk-channel-wrap {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+}
+
+.gk-channel-legend {
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.gk-channel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+
+    .gk-channel-name { flex: 1; font-weight: 600; color: $text-primary; }
+}
+
+.gk-legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+// ---------------------------------------------------------------
+// OUTLET CARDS (Tab 1)
+// ---------------------------------------------------------------
+.gk-outlet-card {
+    hr {
+        border: none;
+        border-top: 1px solid $border-hairline;
+        margin: 16px 0;
+    }
+}
+
+.gk-outlet-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.gk-outlet-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-card;
+    background: $brand-tint;
+    color: $brand;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+}
+
+.gk-outlet-name {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    b { color: $text-primary; font-size: 15px; }
+}
+
+.gk-outlet-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 10px;
+
+    .gk-muted { font-size: 12px; }
+}
+
+// ---------------------------------------------------------------
+// EXPENSE BARS / PAYMENT BARS (Tab 2 & 3)
+// ---------------------------------------------------------------
+.gk-expense-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gk-expense-row {
+    border-radius: $radius-control;
+    margin: 0 -8px;
+    padding: 4px 8px;
+    transition: background 0.12s ease;
+
+    // Hover state — terasa interaktif meski belum ada aksi klik (spec §3)
+    &:hover { background: $bg-canvas; }
+
+    .gk-expense-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13.5px;
+        margin-bottom: 6px;
+
+        b { color: $text-primary; font-weight: 600; }
+    }
+
+    // Klaster kanan: nominal + "· x,x%" dari total (spec §3 Breakdown)
+    .gk-expense-right {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .gk-pct {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: $text-secondary;
+        font-feature-settings: "tnum";
+    }
+}
+
+.gk-bar-track {
+    height: 8px;
+    background: $track;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.gk-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: $brand;   // gradasi per kategori menyusul di Stage 3
+    min-width: 4px;
+}
+
+.gk-expense-total {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid $border-hairline;
+    margin-top: 16px;
+    padding-top: 14px;
+    font-size: 14px;
+
+    span { color: $text-secondary; }
+    b { color: $text-primary; font-size: 16px; font-weight: 600; }
+}
+
+// ---------------------------------------------------------------
+// CASH & BANK (Tab 2) — F-UI.1: grid card pastel ala FinanceFlow
+// "Daftar Akun" (foto 03): ikon + nama+tipe, nominal besar, progress
+// bar "Porsi dari Total". Background per card di-set inline dari
+// cashCardColor() (turunan CHART_COLORS alpha 10%); aksen solid di
+// border kiri & bar. Tanpa tombol aksi (read-only).
+// ---------------------------------------------------------------
+.gk-cash-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+
+    @media (max-width: 1400px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 720px) { grid-template-columns: 1fr; }
+}
+
+.gk-cash-card {
+    border-radius: $radius-card;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;   // izinkan nominal panjang ellipsis, jangan pecah grid
+}
+
+.gk-cash-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.gk-cash-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gk-cash-pct-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+
+    .gk-muted { font-size: 11.5px; }
+}
+
+// Legacy list style — dipertahankan bila dipakai tempat lain; tidak lagi
+// dirender oleh Tab 2 sejak F-UI.1.
+
+.gk-cash-ico {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+
+    &.kas { background: rgba(232, 163, 61, 0.15); color: #B45309; }
+    &.bank { background: rgba(59, 111, 224, 0.12); color: $accent-blue; }
+    &.ewallet { background: $brand-tint; color: $brand; }
+}
+
+.gk-cash-name {
+    display: flex;
+    flex-direction: column;
+
+    b { color: $text-primary; font-size: 13.5px; }
+}
+
+// ---------------------------------------------------------------
+// BALANCE / CASHFLOW (Tab 2)
+// ---------------------------------------------------------------
+.gk-balance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+
+    .neg .gk-strong { color: $negative; }
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.gk-cashflow {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.gk-cashflow-item {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: $panel-wash;
+    border: 1px solid $border-hairline;
+    border-radius: $radius-card;
+    padding: 14px 16px;
+
+    i {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: $track;
+        color: $text-secondary;
+    }
+
+    &.in i { background: rgba(30, 142, 90, 0.12); color: $positive; }
+    &.out i { background: rgba(214, 69, 69, 0.12); color: $negative; }
+
+    b { color: $text-primary; }
+}
+
+// ---------------------------------------------------------------
+// TABLES
+// ---------------------------------------------------------------
+.gk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+
+    th {
+        text-align: left;
+        font-size: 12px;
+        // sentence case — bukan uppercase (spec §2 Tipografi)
+        color: $text-secondary;
+        font-weight: 600;
+        padding: 8px 10px;
+        border-bottom: 1px solid $border-hairline;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid $divider-soft;
+        color: $text-primary;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .right { text-align: right; }
+    .green { color: $positive; font-weight: 600; }
+    .gk-muted { font-size: 12px; }
+
+    .gk-total-row td {
+        border-top: 1px solid $border-hairline;
+        background: $panel-wash;
+    }
+}
+
+// ---------------------------------------------------------------
+// RESPONSIVE & PRINT
+// ---------------------------------------------------------------
+// Di layar kecil sidebar jadi bar atas, konten tetap scroll di .gk-main
+@media (max-width: 768px) {
+    .gk-dash { flex-direction: column; height: 100%; }
+
+    .gk-sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 45vh;
+        border-right: none;
+        border-bottom: 1px solid $border-hairline;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .gk-sidebar-bottom { margin-top: 16px; }
+}
+
+// ---------------------------------------------------------------
+// MOBILE KPI REFINEMENTS (Redesign PowerBI — Stage 6)
+// KPI 1 kolom di layar sempit: nilai lebih kecil, foot-row tidak wrap
+// kasar, sparkline tetap anchor kanan-bawah, jarak antar kartu rapat
+// tapi tetap lega. Hero value menyusut & gauge pindah baris penuh.
+// ---------------------------------------------------------------
+@media (max-width: 700px) {
+    .gk-main {
+        padding: 20px 16px 32px;
+    }
+
+    .gk-card {
+        padding: 18px 16px;
+    }
+
+    .gk-kpi-row {
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .gk-kpi-value {
+        font-size: 24px;
+    }
+
+    // Hero band dihapus (OVERHAUL 15 Sep) — tidak ada rule hero di mobile.
+
+    .gk-kpi-foot-row {
+        align-items: center;
+
+        .gk-kpi-foot {
+            flex-wrap: wrap;
+            row-gap: 2px;
+        }
+    }
+
+    .gk-kpi-spark {
+        width: 48px;
+        height: 22px;
+    }
+
+    .gk-strong.big { font-size: 18px; }
+
+    .gk-title { font-size: 19px; }
+
+    // Aksi header (picker + outlet + ekspor) boleh wrap jadi 2 baris
+    .gk-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    // Donut tidak melimpah di layar sempit
+    .gk-chart-box.square { width: 200px; height: 200px; }
+}
+
+// ---------------------------------------------------------------
+// F1 BERANDA — grid 5 KPI polos + stat mini (OVERHAUL 15 Sep: icon
+// circle & accent dihapus; .gk-kpi-icon tetap ada untuk widget
+// Kas/Bank/Settlement; .gk-kpsak-* dihapus per keputusan user)
+// ---------------------------------------------------------------
+.gk-kpi-row--5 {
+    grid-template-columns: repeat(5, 1fr);
+    @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 800px) { grid-template-columns: 1fr; }
+}
+.gk-kpi-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+    &.teal { background: rgba(15,124,108,0.12); color: $brand; }
+    &.amber { background: rgba(232,163,61,0.16); color: #B45309; }
+    &.blue { background: rgba(59,111,224,0.12); color: $accent-blue; }
+    &.purple { background: rgba(139,92,246,0.12); color: #7C3AED; }
+    &.red { background: rgba(214,69,69,0.12); color: $negative; }
+}
+.gk-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+    @media (max-width: 1000px) { grid-template-columns: 1fr; }
+}
+.gk-stat-mini {
+    display: flex; flex-direction: column; gap: 8px;
+    .gk-stat-mini-head { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; }
+    .gk-stat-mini-value { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+}
+
+
+// window.print() (tombol Ekspor PDF): lepas height/overflow supaya
+// seluruh konten ikut tercetak, bukan hanya layar pertama.
+@media print {
+    .o_web_client,
+    .o_action_manager,
+    .o_action,
+    .gk-dash,
+    .gk-main {
+        height: auto !important;
+        overflow: visible !important;
+    }
+    .gk-sidebar { display: none; }
+}
+
+// ---------------------------------------------------------------
+// STATES
+// ---------------------------------------------------------------
+.gk-loading, .gk-empty {
+    padding: 80px 40px;
+    text-align: center;
+    color: $text-secondary;
+
+    i { color: #C6CBD4; }
+}
+
+.gk-empty-hint { font-size: 12.5px; margin-top: 4px; }

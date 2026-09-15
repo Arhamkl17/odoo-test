@@ -5,10 +5,13 @@
     "../docker-compose.yml",
     "docker-compose.override.yml"
   ],
+
   "service": "odoo",
+
   "workspaceFolder": "/workspaces/Odoo-mv",
 
   "forwardPorts": [8069, 5432],
+
   "portsAttributes": {
     "8069": {
       "label": "Odoo",

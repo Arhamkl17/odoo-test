@@ -7,9 +7,13 @@ __pycache__/
 *.swp
 .DS_Store
 
-# Backup dump database (besar, jangan masuk repo)
+# Backup database (besar, jangan masuk repo)
 *.sql
 *.dump
+backups/
+
+# Keluaran sementara skrip verifikasi restore
+metrics_setelah_restore.txt
 
 # Data sensitif / kredensial
 .env

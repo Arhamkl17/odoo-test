@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="geprekyukss_dashboard.ReportPage">
+        <div class="gk-dash gk-reports">
+            <!-- ===== Sidebar: section LAPORAN (keputusan Q2) ===== -->
+            <aside class="gk-sidebar">
+                <!-- Branding Geprekyukss — sama dgn sidebar dashboard -->
+                <div class="gk-brand">
+                    <img class="gk-brand-logo-img"
+                         src="/geprekyukss_dashboard/static/src/brand/logo.jpg"
+                         alt="Logo Geprekyukss"/>
+                    <div>
+                        <div class="gk-brand-name">Geprekyukss</div>
+                        <div class="gk-brand-sub">F&amp;B Operations</div>
+                    </div>
+                </div>
+
+                <nav class="gk-nav">
+                    <div class="gk-nav-section">Laporan</div>
+                    <!-- F-UI.2b: grouping semantik (satu sumber dgn sidebar
+                         dashboard via getGroupedReports) — gaya FinanceFlow -->
+                    <t t-foreach="groupedReports" t-as="grp" t-key="grp.id">
+                        <div class="gk-nav-section gk-nav-group" t-esc="grp.label"/>
+                        <t t-foreach="grp.reports" t-as="key" t-key="key">
+                            <a href="#"
+                               t-att-class="'gk-nav-item' + (state.activeReport === key ? ' active' : '') + (reports[key].disabled ? ' disabled' : '')"
+                               t-att-title="reports[key].description"
+                               t-on-click.prevent="() => this.selectReport(key)">
+                                <i t-att-class="'fa ' + reports[key].icon"/>
+                                <span t-esc="reports[key].label"/>
+                                <i t-if="reports[key].disabled" class="fa fa-lock gk-nav-lock" title="Template dibuat di F5"/>
+                            </a>
+                        </t>
+                    </t>
+                    <div class="gk-nav-section gk-nav-back">
+                        <a href="#" class="gk-nav-item" t-on-click.prevent="backToDashboard">
+                            <i class="fa fa-arrow-left"/><span>Kembali ke Dashboard</span>
+                        </a>
+                    </div>
+                    <div class="gk-nav-section gk-nav-engine">
+                        <span class="gk-engine-tag">Engine: OCA — AFR &amp; MIS Builder</span>
+                    </div>
+                </nav>
+
+                <div class="gk-sidebar-bottom">
+                    <div class="gk-outlets-head">
+                        <span class="gk-outlets-label">Koneksi outlet</span>
+                        <span class="gk-live-flag"><span class="gk-live-dot"/>Live</span>
+                    </div>
+                    <div class="gk-outlet"><span class="gk-dot"/>Restoran Pallangga</div>
+                    <div class="gk-outlet"><span class="gk-dot"/>Restoran Mallengkeri</div>
+                </div>
+            </aside>
+
+            <main class="gk-main">
+                <!-- ===== Header + filter bar (Q3: minimal + Filter Lanjutan) ===== -->
+                <header class="gk-header">
+                    <div>
+                        <h1 class="gk-title" t-esc="activeReportConfig.label"/>
+                        <div class="gk-subtitle" t-esc="activeReportConfig.description"/>
+                    </div>
+                    <div class="gk-header-actions">
+                        <!-- F-UI.5: month picker (mode bulan) ↔ rentang kustom
+                             (input date + preset). Default = perilaku lama. -->
+                        <t t-if="state.rangeMode === 'month'">
+                            <div class="gk-month-picker">
+                                <button class="gk-month-btn" t-on-click="prevMonth" title="Bulan sebelumnya">‹</button>
+                                <span class="gk-month-label"><i class="fa fa-calendar"/> <t t-esc="monthLabel"/></span>
+                                <button class="gk-month-btn" t-on-click="nextMonth" title="Bulan berikutnya">›</button>
+                            </div>
+                            <button class="gk-btn-export gk-btn-ghost gk-range-toggle"
+                                    t-on-click="() => this.setRangeMode('custom')"
+                                    title="Pilih rentang tanggal bebas">
+                                <i class="fa fa-arrows-h"/> Rentang Kustom
+                            </button>
+                        </t>
+                        <t t-else="">
+                            <div class="gk-range-picker">
+                                <input type="date" class="gk-range-input" t-model="state.customFrom"
+                                       t-on-change="onCustomRangeChange" aria-label="Tanggal awal"/>
+                                <span class="gk-range-sep">–</span>
+                                <input type="date" class="gk-range-input" t-model="state.customTo"
+                                       t-on-change="onCustomRangeChange" aria-label="Tanggal akhir"/>
+                            </div>
+                            <div class="gk-range-presets" t-att-class="state.rangeError ? ' has-error' : ''">
+                                <button t-att-class="'gk-range-chip' + (state.activePreset === 'this_month' ? ' active' : '')"
+                                        t-on-click="() => this.applyPreset('this_month')">Bulan Ini</button>
+                                <button t-att-class="'gk-range-chip' + (state.activePreset === 'last_month' ? ' active' : '')"
+                                        t-on-click="() => this.applyPreset('last_month')">Bulan Lalu</button>
+                                <button t-att-class="'gk-range-chip' + (state.activePreset === 'ytd' ? ' active' : '')"
+                                        t-on-click="() => this.applyPreset('ytd')">YTD</button>
+                                <button t-att-class="'gk-range-chip' + (state.activePreset === '30d' ? ' active' : '')"
+                                        t-on-click="() => this.applyPreset('30d')">30 Hari</button>
+                                <button t-att-class="'gk-range-chip' + (state.activePreset === '90d' ? ' active' : '')"
+                                        t-on-click="() => this.applyPreset('90d')">90 Hari</button>
+                                <button class="gk-range-chip gk-range-back"
+                                        t-on-click="() => this.setRangeMode('month')"
+                                        title="Kembali ke pilihan bulan">⟲ Bulan</button>
+                            </div>
+                        </t>
+
+                        <div class="gk-outlet-filter" t-ref="reportWrap">
+                            <button class="gk-outlet-btn"
+                                    t-att-class="state.outletMenuOpen ? 'open' : ''"
+                                    t-on-click.stop="toggleOutletMenu">
+                                <i class="fa fa-map-marker"/>
+                                <span class="gk-outlet-label" t-esc="state.outletName"/>
+                                <i class="fa fa-caret-down gk-outlet-caret"/>
+                            </button>
+                            <div t-if="state.outletMenuOpen" class="gk-outlet-menu">
+                                <button class="gk-outlet-option"
+                                        t-att-class="!state.outletIds.length ? ' active' : ''"
+                                        t-on-click.stop="() => this.selectOutlet({id: 'all', name: 'Semua Outlet'})">
+                                    <i t-att-class="!state.outletIds.length ? 'fa fa-check' : 'fa fa-circle-o gk-outlet-bullet'"/>
+                                    <span>Semua Outlet</span>
+                                </button>
+                                <t t-foreach="state.outlets" t-as="opt" t-key="opt.id">
+                                    <button class="gk-outlet-option"
+                                            t-att-class="state.outletIds.includes(opt.id) ? ' active' : ''"
+                                            t-on-click.stop="() => this.selectOutlet(opt)">
+                                        <i t-att-class="state.outletIds.includes(opt.id) ? 'fa fa-check' : 'fa fa-circle-o gk-outlet-bullet'"/>
+                                        <span t-esc="opt.name"/>
+                                    </button>
+                                </t>
+                            </div>
+                        </div>
+
+                        <button class="gk-btn-export gk-btn-ghost" t-on-click="openAdvancedFilter"
+                                title="Buka wizard filter lengkap Odoo (account/journal/partner, dll)">
+                            <i class="fa fa-sliders"/> Filter Lanjutan
+                        </button>
+                        <button class="gk-btn-export" t-on-click="() => this.exportReport('pdf')"
+                                t-att-disabled="state.exporting">
+                            <i class="fa fa-download"/> PDF
+                        </button>
+                        <button class="gk-btn-export" t-on-click="() => this.exportReport('xlsx')"
+                                t-att-disabled="state.exporting">
+                            <i class="fa fa-file-excel-o"/> XLSX
+                        </button>
+                    </div>
+                </header>
+
+                <!-- F-UI.5: validasi rentang + hint semantik kolom MIS -->
+                <div t-if="state.rangeError" class="gk-range-error">
+                    <i class="fa fa-exclamation-circle"/> <t t-esc="state.rangeError"/>
+                </div>
+                <div t-if="misRangeHint and !state.rangeError" class="gk-range-hint">
+                    <i class="fa fa-info-circle"/> <t t-esc="misRangeHint"/>
+                </div>
+
+                <!-- ===== State machine ===== -->
+                <div t-if="state.phase === 'loading'" class="gk-loading">
+                    <i class="fa fa-circle-o-notch fa-spin fa-2x"/><p>Memuat laporan…</p>
+                </div>
+
+                <div t-elif="state.phase === 'error'" class="gk-error">
+                    <i class="fa fa-exclamation-triangle fa-2x"/>
+                    <p t-esc="state.errorText"/>
+                    <button class="gk-btn-export" t-on-click="retry">Coba Lagi</button>
+                </div>
+
+                <div t-elif="state.phase === 'empty'" class="gk-empty">
+                    <i class="fa fa-inbox fa-2x"/>
+                    <p>Tidak ada data untuk <b t-esc="activeReportConfig.label"/></p>
+                    <p class="gk-empty-hint">Coba ubah bulan atau kelola filter outlet.</p>
+                </div>
+
+                <!-- Slot renderer (delegasi ke child — Opsi B §B.3) -->
+                <div t-elif="state.phase === 'success' and state.data" class="gk-report-body">
+                    <ReportTable t-if="state.data.kind === 'table'"
+                                 columns="state.data.columns" rows="state.data.rows"
+                                 meta="state.data.meta"/>
+                    <ReportMatrix t-elif="state.data.kind === 'matrix'"
+                                  payload="state.data"/>
+                </div>
+            </main>
+        </div>
+    </t>
+
+</templates>
