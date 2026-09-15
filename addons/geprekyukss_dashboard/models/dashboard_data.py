@@ -598,6 +598,39 @@ class GkDashboardData(models.AbstractModel):
             total_dep_month += dep_month
         asset_rows.sort(key=lambda r: -r["gross"])
 
+        # --- Jadwal penyusutan mendatang dari register OCA (F4, 15 Sep 2026) ---
+        # Sebelum F4 tidak ada satu pun baris di `account.asset`, sehingga panel
+        # "Jadwal Penyusutan Mendatang" hanya placeholder. Kini jadwalnya dibaca
+        # dari `account.asset.line` (baris terjadwal yang belum diposting),
+        # diagregasi per bulan untuk 12 bulan pertama setelah `date_to`.
+        schedule = []
+        try:
+            lines = self.env["account.asset.line"].search([
+                ("type", "=", "depreciate"),
+                ("init_entry", "=", False),
+                ("move_check", "=", False),
+                ("line_date", ">", date_to),
+            ], order="line_date")
+            buckets = {}
+            for ln in lines:
+                key = ln.line_date.strftime("%Y-%m")
+                bucket = buckets.setdefault(key, {"amount": 0.0, "assets": set()})
+                bucket["amount"] += ln.amount or 0.0
+                bucket["assets"].add(ln.asset_id.id)
+            bulan = ("Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+                     "Jul", "Agu", "Sep", "Okt", "Nov", "Des")
+            for key in sorted(buckets)[:12]:
+                y, m = key.split("-")
+                b = buckets[key]
+                schedule.append({
+                    "month": key,
+                    "label": "%s %s" % (bulan[int(m) - 1], y),
+                    "amount": b["amount"],
+                    "count": len(b["assets"]),
+                })
+        except Exception:      # modul aset belum terpasang → panel kosong
+            schedule = []
+
         # --- Persediaan per gudang
         wh_rows, inv_total = [], 0.0
         for wh in self.env["stock.warehouse"].search([]):
@@ -628,6 +661,9 @@ class GkDashboardData(models.AbstractModel):
                 "total_accum": total_accum,
                 "total_net": total_gross - total_accum,
                 "total_dep_month": total_dep_month,
+                "schedule": schedule,
+                "schedule_total": sum(s["amount"] for s in schedule),
+                "schedule_next": schedule[0]["label"] if schedule else None,
             },
             "inventory": {"per_warehouse": wh_rows, "total": inv_total},
             "waste": {"count": len(scraps), "total_value": waste_total, "rows": scraps},

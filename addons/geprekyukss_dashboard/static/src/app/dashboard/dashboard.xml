@@ -617,8 +617,27 @@
             </div>
 
             <div class="gk-card">
-                <div class="gk-card-head"><h3>Jadwal Penyusutan Mendatang</h3><span class="gk-muted">F6: next_date = date_to + 30 hari</span></div>
-                <p class="gk-muted">Jadwal per aset menyusul — data penyusutan bulanan sudah ada.</p>
+                <div class="gk-card-head"><h3>Jadwal Penyusutan Mendatang</h3><span class="gk-muted">sumber: register aset OCA · 12 bulan pertama setelah periode</span></div>
+                <t t-if="state.data.ops.assets.schedule and state.data.ops.assets.schedule.length">
+                    <table class="gk-table">
+                        <thead><tr><th>Bulan</th><th class="right">Beban Penyusutan</th><th class="right">Jml Aset</th></tr></thead>
+                        <tbody>
+                            <t t-foreach="state.data.ops.assets.schedule" t-as="s" t-key="s.month">
+                                <tr>
+                                    <td t-esc="s.label"/>
+                                    <td class="right green" t-esc="formatRp(s.amount)"/>
+                                    <td class="right" t-esc="s.count"/>
+                                </tr>
+                            </t>
+                            <tr class="gk-total-row">
+                                <td><b>Total 12 bulan</b></td>
+                                <td class="right"><b t-esc="formatRp(state.data.ops.assets.schedule_total)"/></td>
+                                <td class="right">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </t>
+                <p t-else="" class="gk-muted">Belum ada jadwal penyusutan di register aset.</p>
             </div>
         </t>
 

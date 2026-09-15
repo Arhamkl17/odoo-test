@@ -129,6 +129,19 @@ out("pos_configs", PC.search_count([]))
 out("pos_configs_active", PC.search_count([("active", "=", True)]))
 out("taxes", env["account.tax"].search_count([]))
 
+# --- Aset tetap (register OCA account_asset_management, F4 15 Sep 2026) ---
+# Metrik ini menjaga register + jadwal penyusutan ikut terbukti utuh saat restore.
+try:
+    assets = env["account.asset"].with_context(active_test=False).search([])
+    out("assets_registered", len(assets))
+    out("assets_purchase_value", n(sum(assets.mapped("purchase_value"))))
+    out("assets_depreciated_value", n(sum(assets.mapped("value_depreciated"))))
+    out("assets_residual_value", n(sum(assets.mapped("value_residual"))))
+    out("assets_depreciation_lines", env["account.asset.line"].search_count([]))
+    out("assets_depreciation_profiles", env["account.asset.profile"].search_count([]))
+except KeyError:
+    out("assets_registered", "n/a (modul account_asset_management tidak terpasang)")
+
 # --- Modul terpasang --------------------------------------------------
 IM = env["ir.module.module"].sudo()
 out("modules_installed", IM.search_count([("state", "=", "installed")]))

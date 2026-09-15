@@ -72,7 +72,7 @@ bash scripts/restore_full_system.sh "/path/ke/Test1_full_2026-09-15.zip"
 Skrip ini otomatis:
 - membuat ulang database `Test1` (butuh `FORCE=1` bila DB sudah ada — akan **menghapus** isinya),
 - memulihkan filestore ke `/var/lib/odoo/filestore/Test1` + `chown odoo:odoo`,
-- mengecek 59 angka kunci terhadap `baseline_metrics.txt` (harus `RESULT: ALL METRICS MATCH`),
+- mengecek 65 angka kunci terhadap `baseline_metrics.txt` (harus `RESULT: ALL METRICS MATCH`),
 - menjalankan 6 test parity proyek (`RUN_TESTS=0` untuk melewatinya).
 
 **4. Buktikan berhasil** — jalankan ulang verifikasi kapan pun:
@@ -100,9 +100,11 @@ su odoo -s /bin/bash -c "odoo shell -d Test1 --no-http --db_host db --db_port 54
 | Produk aktif / menu POS / BOM (+baris) | 205 / 103 / 100 (+940) |
 | Vendor (+baris harga) | 8 (+52) |
 | Modul terpasang / kunci periode | 138 / 2026-08-31 |
+| Aset tetap terdaftar (bruto · akumulasi · nilai buku) | 3 · 760.000.000,00 · 200.908.363,72 · 559.091.636,28 |
+| Baris jadwal penyusutan / profil aset | 250 / 3 |
 | Modul kustom | `geprekyukss_dashboard=installed`, `geprekyukss_pos=installed` |
 
-Keberhasilan penuh = **59/59 metrik sama** dan **6/6 test parity** `ALL PASS`
+Keberhasilan penuh = **65/65 metrik sama** dan **6/6 test parity** `ALL PASS`
 (`test_f2_tb_crosscheck`, `test_f5_pl_parity`, `test_f5b_bs_parity`, `test_f6_aged_partner`,
 `test_report_actions`, `test_beranda_overhaul`).
 
@@ -131,19 +133,21 @@ Keberhasilan penuh = **59/59 metrik sama** dan **6/6 test parity** `ALL PASS`
 |---|---|
 | `INSPEKSI_SISTEM_2026-09-15.md` | hasil inspeksi read-only menyeluruh + baseline angka + cara mengulang inspeksi |
 | `PLANNING_PERBAIKAN_HASIL_INSPEKSI_2026-09-15.md` | rencana & status fase perbaikan (F1–F7) |
-| `RINGKASAN_PERBAIKAN_F1_F2_2026-09-15.md`, `RINGKASAN_PERBAIKAN_F3_2026-09-15.md` | ringkasan perbaikan yang sudah selesai (HPP sub-resep, persediaan, penomoran jurnal, vendor) |
+| `RINGKASAN_PERBAIKAN_F1_F2_2026-09-15.md`, `RINGKASAN_PERBAIKAN_F3_2026-09-15.md`, `RINGKASAN_PERBAIKAN_F4_2026-09-15.md` | ringkasan perbaikan yang sudah selesai (HPP sub-resep, persediaan, penomoran jurnal, vendor, register aset tetap) |
+| `RINGKASAN_PERBAIKAN_F7_KERAPIAN_2026-09-15.md`, `RINGKASAN_PERBAIKAN_F7_PARTNER_AR_2026-09-15.md` | kerapian F7 (pricelist arsip, DB sisa, partner baris AR POS) |
 | `backups/.../README_BACKUP.md`, `INFO.txt` | detail isi backup, versi Odoo/PostgreSQL, commit git saat backup |
 | `backups/.../master/*.csv` | seluruh tabel master & transaksi dalam CSV (produk, BOM, harga, COA, vendor, POS, jurnal, stok) |
 
-Fase yang **masih terbuka** (belum dikerjakan, jangan dikerjakan tanpa keputusan pemilik):
-**F4** register aset tetap OCA · **F5** alur picking & atribusi lokasi produksi per outlet ·
-**F6** label "data demo/portofolio sintetis" + recon vs laporan klien nyata ·
-**F7** kerapian modul OCA/data/UI (termasuk hapus DB sisa `tmp_cost_snap`).
+Status fase perbaikan (lihat `PLANNING_PERBAIKAN_HASIL_INSPEKSI_2026-09-15.md`):
+**F1 · F2 · F3 · F4 selesai**; **F7 sebagian** (pricelist arsip, DB sisa `tmp_cost_snap`,
+partner pada baris AR POS sudah diberesi); **F5** (alur picking & atribusi lokasi produksi
+per outlet) dan **F6** (label "data demo/portofolio sintetis" + recon vs laporan klien nyata)
+**masih terbuka** — jangan dikerjakan tanpa keputusan pemilik.
 
 ### Laporan yang diharapkan darimu
 
 1. Ringkasan: berhasil/gagal, lama proses, nama database & URL.
-2. Tabel 59 metrik baseline vs setelah-restore (dari keluaran skrip) — sebutkan bila ada yang berbeda.
+2. Tabel seluruh metrik baseline vs setelah-restore (dari keluaran skrip) — sebutkan bila ada yang berbeda.
 3. Hasil 6 test parity (masing-masing `ALL PASS` / daftar kegagalan).
 4. Lokasi berkas backup yang dipakai + hasil `sha256sum -c`.
 5. Bila ada yang tidak bisa dipulihkan (mis. zip tidak ditemukan), sebutkan tepat apa yang dibutuhkan.

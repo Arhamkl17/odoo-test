@@ -3,7 +3,7 @@
 > **Sumber temuan:** `INSPEKSI_SISTEM_2026-09-15.md` (inspeksi read-only: psql + odoo shell + 6 test parity proyek)
 > **Lingkungan:** Odoo 19.0 · DB `Test1` · 32.700 order POS · 3.613 jurnal · 138 modul
 > **Prinsip kerja (wajib):** (1) backup dulu, (2) skrip **dry-run default** — eksekusi hanya dengan `RUN=1`, (3) tiap fase ditutup dengan rekomputasi SQL + test parity, (4) master data yang sudah bersih **tidak disentuh**.
-> **Status:** **F1 · F2 · F3 SELESAI** (lihat §12 & §13) — sisa: F4 (aset), F5 (picking/lokasi), F6 (label & recon), F7 (kerapian).
+> **Status:** **F1 · F2 · F3 SELESAI** (lihat §12 & §13) · **F7 sebagian** — pricelist arsip & DB sisa sudah dibersihkan 15 Sep (lihat `RINGKASAN_PERBAIKAN_F7_KERAPIAN_2026-09-15.md`) — sisa: F4 (aset), F5 (picking/lokasi), F6 (label & recon), F7 (kerapian lain).
 > ⚠️ Period lock 31 Agu 2026 **sudah aktif** → jalankan `UNLOCK=1` dulu sebelum koreksi periode berikutnya (§13.5).
 
 ---
@@ -206,11 +206,11 @@ selaras dengan nomor terakhir terpakai; TB DR = CR; HPP tidak berubah (449.863.6
 | # | Aksi |
 |---|---|
 | 1 | Isi `date_range` + `account_fiscal_year`, atau matikan bila laporan OCA tak memakainya |
-| 2 | Putuskan `partner_statement` & `account_tax_balance` (dipakai / di-uninstall) |
-| 3 | Isi `partner_id` untuk **1.898 baris** AR POS (`11210011`) → aged partner & partner statement punya isi |
-| 4 | Arsipkan pricelist `Harga Dine In` (id 4) + `pos.config` 6/7 arsip |
+| 2 | Putuskan `partner_statement` & `account_tax_balance` (dipakai / di-uninstall) — *`partner_statement` kini terbukti berisi setelah F7 butir 3, jadi sudah ada alasan untuk dipertahankan* |
+| 3 | Isi `partner_id` untuk **1.898 baris** AR POS (`11210011`) → aged partner & partner statement punya isi — ✅ *selesai 15 Sep: atribusi per kanal pembayaran (6 partner), lihat `RINGKASAN_PERBAIKAN_F7_PARTNER_AR_2026-09-15.md`* |
+| 4 | Arsipkan pricelist `Harga Dine In` (id 4) + `pos.config` 6/7 arsip — ✅ *selesai 15 Sep: pricelist dihapus, config 6/7 diarahkan ke `Harga Normal`* |
 | 5 | Putuskan **24 menu POS** yang tidak pernah terjual dalam 72 hari (aktifkan promo / nonaktifkan) |
-| 6 | Hapus DB sisa `tmp_cost_snap` (142 MB) |
+| 6 | Hapus DB sisa `tmp_cost_snap` (142 MB) — ✅ *selesai 15 Sep: diarsipkan ke `backup_snapshot_tmp_cost_snap_2026-09-15.dump` lalu dihapus* |
 | 7 | Lengkapi panel UI placeholder: Rekap per Outlet/Hari (F2), Daftar Transaksi 15/hal + Produk Terlaris berfoto (F3), Transaksi Kas & Bank + Rekonsiliasi (F5), Jadwal Penyusutan (F6), Stok 15/hal + Stok Menipis (F7) |
 | 8 | Impor rekening koran bank (BSI/wallet) bila fitur Rekonsiliasi Bank ingin nyata (sekarang hanya kas 146 baris) |
 
